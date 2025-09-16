@@ -79,10 +79,10 @@ public class DamageFeedEntry {
             formattedDamage = String.valueOf((int) Math.floor(damageAmount));
         }
 
-        String entryText = String.format("%s %s damage by %s",
+        String entryText = String.format("%s took %s damage from %s",
+            playerName,
             formattedDamage,
-            damageSource,
-            playerName);
+            damageSource);
 
         // Pad the text to a consistent width
         if (entryText.length() < WIDTH_PADDING.length()) {
