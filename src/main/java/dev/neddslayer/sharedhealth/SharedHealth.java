@@ -29,11 +29,14 @@ public class SharedHealth implements ModInitializer {
             GameRuleRegistry.register("shareHunger", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> SYNC_ENDER_PEARLS =
             GameRuleRegistry.register("shareEnderPearls", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
+    public static final GameRules.Key<GameRules.BooleanRule> SYNC_STATUS_EFFECTS =
+            GameRuleRegistry.register("shareStatusEffects", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> LIMIT_HEALTH =
             GameRuleRegistry.register("limitHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     private static boolean lastHealthValue = true;
     private static boolean lastHungerValue = true;
     private static boolean lastEnderPearlValue = true;
+    private static boolean lastStatusEffectsValue = true;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
 
@@ -72,10 +75,11 @@ public class SharedHealth implements ModInitializer {
                         for (ServerWorld world : source.getServer().getWorlds()) {
                             world.setTimeOfDay(1000); // Set to day (1000 ticks = morning)
                             world.resetWeather(); // Clear weather
+                            world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
                         }
 
                         source.sendFeedback(() -> Text.literal("Countdown timer started from 0.").formatted(Formatting.GREEN), true);
-                        source.sendFeedback(() -> Text.literal("Time set to day and weather cleared.").formatted(Formatting.YELLOW), true);
+                        source.sendFeedback(() -> Text.literal("Time set to day, weather cleared, and immediate respawn enabled.").formatted(Formatting.YELLOW), true);
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
                     }
@@ -131,6 +135,7 @@ public class SharedHealth implements ModInitializer {
             boolean currentHealthValue = world.getGameRules().getBoolean(SYNC_HEALTH);
             boolean currentHungerValue = world.getGameRules().getBoolean(SYNC_HUNGER);
             boolean currentEnderPearlValue = world.getGameRules().getBoolean(SYNC_ENDER_PEARLS);
+            boolean currentStatusEffectsValue = world.getGameRules().getBoolean(SYNC_STATUS_EFFECTS);
             boolean limitHealthValue = world.getGameRules().getBoolean(LIMIT_HEALTH);
             if (currentHealthValue != lastHealthValue && currentHealthValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareHealth.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
@@ -155,6 +160,14 @@ public class SharedHealth implements ModInitializer {
             else if (currentEnderPearlValue != lastEnderPearlValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareEnderPearls.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
                 lastEnderPearlValue = false;
+            }
+            if (currentStatusEffectsValue != lastStatusEffectsValue && currentStatusEffectsValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareStatusEffects.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
+                lastStatusEffectsValue = true;
+            }
+            else if (currentStatusEffectsValue != lastStatusEffectsValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareStatusEffects.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
+                lastStatusEffectsValue = false;
             }
             if (world.getGameRules().getBoolean(SYNC_HEALTH)) {
                 SharedHealthComponent component = SHARED_HEALTH.get(world.getScoreboard());

@@ -10,7 +10,8 @@
     "LivingEntityMixin",
     "PlayerEntityMixin",
     "SaturationStatusEffectMixin",
-    "ServerPlayerEntityMixin"
+    "ServerPlayerEntityMixin",
+    "StatusEffectMixin"
   ],
   "injectors": {
     "defaultRequire": 1
