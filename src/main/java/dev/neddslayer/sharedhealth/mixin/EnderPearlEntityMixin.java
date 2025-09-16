@@ -38,26 +38,33 @@ public abstract class EnderPearlEntityMixin extends ThrownItemEntity {
 
         Vec3d landingPos = hitResult.getPos();
 
-        // Teleport all players to the ender pearl location
-        for (ServerPlayerEntity player : world.getPlayers()) {
-            if (player.isRemoved()) {
-                continue;
+        // Get all players from all dimensions
+        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+            for (ServerPlayerEntity player : serverWorld.getPlayers()) {
+                if (player.isRemoved()) {
+                    continue;
+                }
+
+                // Reset fall distance to apply consistent damage
+                player.setOnGround(false);
+                player.fallDistance = 0;
+
+                // If player is in a different dimension, teleport them to this dimension first
+                if (player.getServerWorld() != world) {
+                    player.teleport(world, landingPos.x, landingPos.y, landingPos.z, java.util.Set.of(), player.getYaw(), player.getPitch(), false);
+                } else {
+                    // Same dimension, just teleport normally
+                    player.requestTeleport(landingPos.x, landingPos.y, landingPos.z);
+                }
+
+                // Apply ender pearl damage (5.0 damage)
+                player.damage(world, world.getDamageSources().fall(), 5.0f);
+
+                // Play teleport sound
+                world.playSound(null, landingPos.x, landingPos.y, landingPos.z,
+                    SoundEvents.ENTITY_PLAYER_TELEPORT, SoundCategory.PLAYERS,
+                    1.0f, 1.0f);
             }
-
-            // Reset fall distance to apply consistent damage
-            player.setOnGround(false);
-            player.fallDistance = 0;
-
-            // Teleport the player
-            player.requestTeleport(landingPos.x, landingPos.y, landingPos.z);
-
-            // Apply ender pearl damage (5.0 damage)
-            player.damage(world, world.getDamageSources().fall(), 5.0f);
-
-            // Play teleport sound
-            world.playSound(null, landingPos.x, landingPos.y, landingPos.z,
-                SoundEvents.ENTITY_PLAYER_TELEPORT, SoundCategory.PLAYERS,
-                1.0f, 1.0f);
         }
 
         // Remove the ender pearl entity
