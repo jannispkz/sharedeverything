@@ -55,6 +55,12 @@ public class ShutdownManager {
     }
 
     private void deleteWorldAndStop() {
+        // Kick all players with reset message
+        Text kickMessage = Text.literal("World is resetting, rejoin in like 15 seconds").formatted(net.minecraft.util.Formatting.YELLOW);
+        for (net.minecraft.server.network.ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            player.networkHandler.disconnect(kickMessage);
+        }
+
         // Save the server first
         server.save(false, true, true);
 
