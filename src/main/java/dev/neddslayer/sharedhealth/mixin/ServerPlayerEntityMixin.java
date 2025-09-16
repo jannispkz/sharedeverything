@@ -73,7 +73,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
         world.getPlayers().forEach(p -> p.kill(world));
 
         // Show death title and play sound to all players
-        net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED OMG").formatted(net.minecraft.util.Formatting.RED);
+        net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED").formatted(net.minecraft.util.Formatting.RED);
         for (ServerWorld serverWorld : world.getServer().getWorlds()) {
             for (ServerPlayerEntity player : serverWorld.getPlayers()) {
                 // Send title
@@ -81,8 +81,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
                 player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(net.minecraft.text.Text.empty()));
                 player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
 
-                // Play bad sound (wither spawn sound is ominous)
+                // Play bad sounds (wither spawn and music disc 13)
                 player.playSoundToPlayer(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN, net.minecraft.sound.SoundCategory.MASTER, 1.0f, 1.0f);
+                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.MUSIC_DISC_13.value(), net.minecraft.sound.SoundCategory.RECORDS, 1.0f, 1.0f);
             }
         }
 
