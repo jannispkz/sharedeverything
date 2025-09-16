@@ -6,6 +6,7 @@ import dev.neddslayer.sharedhealth.components.SharedHungerComponent;
 import dev.neddslayer.sharedhealth.components.SharedSaturationComponent;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
@@ -26,12 +27,26 @@ public class SharedHealth implements ModInitializer {
             GameRuleRegistry.register("limitHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     private static boolean lastHealthValue = true;
     private static boolean lastHungerValue = true;
+    public static DamageFeedManager damageFeedManager;
 
     /**
      * Runs the mod initializer.
      */
     @Override
     public void onInitialize() {
+        // Initialize damage feed manager when server starts
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            damageFeedManager = new DamageFeedManager(server);
+        });
+
+        // Clear damage feed manager when server stops
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            if (damageFeedManager != null) {
+                damageFeedManager.clearFeed();
+                damageFeedManager = null;
+            }
+        });
+
         ServerTickEvents.END_WORLD_TICK.register((world -> {
             boolean currentHealthValue = world.getGameRules().getBoolean(SYNC_HEALTH);
             boolean currentHungerValue = world.getGameRules().getBoolean(SYNC_HUNGER);

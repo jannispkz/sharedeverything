@@ -1,6 +1,7 @@
 package dev.neddslayer.sharedhealth.mixin;
 
 import com.mojang.authlib.GameProfile;
+import dev.neddslayer.sharedhealth.SharedHealth;
 import dev.neddslayer.sharedhealth.components.SharedHealthComponent;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
@@ -36,6 +37,15 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 			float knownHealth = component.getHealth();
 			if (currentHealth != knownHealth) {
 				component.setHealth(currentHealth);
+			}
+
+			// Add damage to the feed
+			if (SharedHealth.damageFeedManager != null) {
+				float actualDamage = knownHealth - currentHealth;
+				if (actualDamage > 0) {
+					String damageType = source.getType().msgId().replace("minecraft.", "").replace(".", " ");
+					SharedHealth.damageFeedManager.addDamageEntry(this.getName().getString(), actualDamage, damageType);
+				}
 			}
 		}
     }
