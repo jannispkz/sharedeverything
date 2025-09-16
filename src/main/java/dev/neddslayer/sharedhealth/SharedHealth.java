@@ -85,20 +85,12 @@ public class SharedHealth implements ModInitializer {
                             world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
                         }
 
-                        // Give healing effects to the player who executed the command
-                        if (source.getEntity() instanceof ServerPlayerEntity player) {
-                            // Clear player inventory
-                            player.getInventory().clear();
-
-                            // Update shared components directly so they persist
-                            SHARED_HEALTH.get(player.getScoreboard()).setHealth(20.0f);
-                            SHARED_HUNGER.get(player.getScoreboard()).setHunger(20);
-                            SHARED_SATURATION.get(player.getScoreboard()).setSaturation(20.0f);
-
-                            // Set player values immediately
-                            player.setHealth(20.0f);
-                            player.getHungerManager().setFoodLevel(20);
-                            player.getHungerManager().setSaturationLevel(20.0f);
+                        // Update shared components to full values (killing/respawning handles the reset)
+                        ServerPlayerEntity firstPlayer = source.getServer().getPlayerManager().getPlayerList().isEmpty() ? null : source.getServer().getPlayerManager().getPlayerList().get(0);
+                        if (firstPlayer != null) {
+                            SHARED_HEALTH.get(firstPlayer.getScoreboard()).setHealth(20.0f);
+                            SHARED_HUNGER.get(firstPlayer.getScoreboard()).setHunger(20);
+                            SHARED_SATURATION.get(firstPlayer.getScoreboard()).setSaturation(20.0f);
                         }
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));

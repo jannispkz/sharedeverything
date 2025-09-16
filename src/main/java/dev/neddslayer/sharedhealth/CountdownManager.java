@@ -14,6 +14,7 @@ public class CountdownManager {
     private boolean isPreCountdown;
     private int preCountdownTicks;
     private static final int PRE_COUNTDOWN_DELAY = 100; // 5 seconds * 20 ticks
+    private static final int BLINDNESS_DURATION = 140; // 7 seconds * 20 ticks
 
     public CountdownManager(MinecraftServer server) {
         this.server = server;
@@ -28,11 +29,23 @@ public class CountdownManager {
         this.isPreCountdown = true;
         this.preCountdownTicks = PRE_COUNTDOWN_DELAY;
 
-        // Give all players blindness for the pre-countdown
+        // Kill all players to reset them at spawn, then give blindness
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                net.minecraft.entity.effect.StatusEffects.BLINDNESS, PRE_COUNTDOWN_DELAY, 0, false, false, true));
+            player.kill(player.getServerWorld());
         }
+
+        // Give all players blindness for 7 seconds after respawn
+        server.execute(() -> {
+            try {
+                Thread.sleep(100); // Small delay to ensure respawn
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                        net.minecraft.entity.effect.StatusEffects.BLINDNESS, BLINDNESS_DURATION, 0, false, false, true));
+                }
+            } catch (Exception e) {
+                System.err.println("[SharedHealth] Error applying blindness: " + e.getMessage());
+            }
+        });
     }
 
     private void startActualTimer() {
