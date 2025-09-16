@@ -76,10 +76,25 @@ public class SharedHealth implements ModInitializer {
                             world.setTimeOfDay(1000); // Set to day (1000 ticks = morning)
                             world.resetWeather(); // Clear weather
                             world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
+
+                            // Reset all players
+                            for (net.minecraft.server.network.ServerPlayerEntity player : world.getPlayers()) {
+                                // Clear inventory
+                                player.getInventory().clear();
+
+                                // Set full health and hunger
+                                player.setHealth(20.0f);
+                                player.getHungerManager().setFoodLevel(20);
+                                player.getHungerManager().setSaturationLevel(5.0f);
+
+                                // Clear all status effects
+                                player.clearStatusEffects();
+                            }
                         }
 
                         source.sendFeedback(() -> Text.literal("Countdown timer started from 0.").formatted(Formatting.GREEN), true);
                         source.sendFeedback(() -> Text.literal("Time set to day, weather cleared, and immediate respawn enabled.").formatted(Formatting.YELLOW), true);
+                        source.sendFeedback(() -> Text.literal("All inventories cleared, health/hunger restored, and effects removed.").formatted(Formatting.YELLOW), true);
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
                     }
