@@ -90,13 +90,15 @@ public class SharedHealth implements ModInitializer {
                             // Clear player inventory
                             player.getInventory().clear();
 
-                            // Directly set hunger and saturation to max
+                            // Update shared components directly so they persist
+                            SHARED_HEALTH.get(player.getScoreboard()).setHealth(20.0f);
+                            SHARED_HUNGER.get(player.getScoreboard()).setHunger(20);
+                            SHARED_SATURATION.get(player.getScoreboard()).setSaturation(20.0f);
+
+                            // Set player values immediately
+                            player.setHealth(20.0f);
                             player.getHungerManager().setFoodLevel(20);
                             player.getHungerManager().setSaturationLevel(20.0f);
-
-                            // Give regeneration for 5 seconds
-                            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                                net.minecraft.entity.effect.StatusEffects.REGENERATION, 100, 100, false, false, true));
                         }
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
