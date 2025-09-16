@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "EnderPearlEntityMixin",
+    "ExperienceMixin",
     "FoodComponentMixin",
     "HungerManagerMixin",
     "LivingEntityMixin",

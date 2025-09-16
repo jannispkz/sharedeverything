@@ -32,12 +32,15 @@ public class SharedHealth implements ModInitializer {
             GameRuleRegistry.register("shareEnderPearls", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> SYNC_STATUS_EFFECTS =
             GameRuleRegistry.register("shareStatusEffects", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
+    public static final GameRules.Key<GameRules.BooleanRule> SYNC_EXPERIENCE =
+            GameRuleRegistry.register("shareExperience", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> LIMIT_HEALTH =
             GameRuleRegistry.register("limitHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     private static boolean lastHealthValue = true;
     private static boolean lastHungerValue = true;
     private static boolean lastEnderPearlValue = true;
     private static boolean lastStatusEffectsValue = true;
+    private static boolean lastExperienceValue = true;
     private static int tabListUpdateCounter = 0;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
@@ -213,6 +216,7 @@ public class SharedHealth implements ModInitializer {
             boolean currentHungerValue = world.getGameRules().getBoolean(SYNC_HUNGER);
             boolean currentEnderPearlValue = world.getGameRules().getBoolean(SYNC_ENDER_PEARLS);
             boolean currentStatusEffectsValue = world.getGameRules().getBoolean(SYNC_STATUS_EFFECTS);
+            boolean currentExperienceValue = world.getGameRules().getBoolean(SYNC_EXPERIENCE);
             boolean limitHealthValue = world.getGameRules().getBoolean(LIMIT_HEALTH);
             if (currentHealthValue != lastHealthValue && currentHealthValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareHealth.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
@@ -245,6 +249,14 @@ public class SharedHealth implements ModInitializer {
             else if (currentStatusEffectsValue != lastStatusEffectsValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareStatusEffects.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
                 lastStatusEffectsValue = false;
+            }
+            if (currentExperienceValue != lastExperienceValue && currentExperienceValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareExperience.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
+                lastExperienceValue = true;
+            }
+            else if (currentExperienceValue != lastExperienceValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareExperience.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
+                lastExperienceValue = false;
             }
             if (world.getGameRules().getBoolean(SYNC_HEALTH)) {
                 SharedHealthComponent component = SHARED_HEALTH.get(world.getScoreboard());
