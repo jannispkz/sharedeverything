@@ -47,8 +47,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 
 					// Check if damage has an attacker entity (mob or player)
 					if (source.getAttacker() != null) {
-						// Use the attacker's name (e.g., "Zombie", "Skeleton", "Steve")
-						damageType = source.getAttacker().getType().getName().getString().toLowerCase();
+						// Check if attacker is a player - use their actual name
+						if (source.getAttacker() instanceof PlayerEntity) {
+							damageType = source.getAttacker().getName().getString();
+						} else {
+							// For mobs, use the entity type name (e.g., "zombie", "skeleton")
+							damageType = source.getAttacker().getType().getName().getString().toLowerCase();
+						}
 					} else {
 						// Fall back to damage type for environmental damage
 						damageType = source.getType().msgId().replace("minecraft.", "").replace(".", " ");
