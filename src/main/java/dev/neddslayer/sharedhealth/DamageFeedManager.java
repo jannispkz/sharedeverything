@@ -35,7 +35,7 @@ public class DamageFeedManager {
         damageObjective = scoreboard.addObjective(
             OBJECTIVE_NAME,
             ScoreboardCriterion.DUMMY,
-            Text.literal(""), // No header
+            Text.empty(), // Completely empty text
             ScoreboardCriterion.RenderType.INTEGER,
             false,
             BlankNumberFormat.INSTANCE
