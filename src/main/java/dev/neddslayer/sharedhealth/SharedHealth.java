@@ -31,6 +31,7 @@ public class SharedHealth implements ModInitializer {
     private static boolean lastHealthValue = true;
     private static boolean lastHungerValue = true;
     public static DamageFeedManager damageFeedManager;
+    public static CountdownManager countdownManager;
 
     /**
      * Runs the mod initializer.
@@ -53,18 +54,39 @@ public class SharedHealth implements ModInitializer {
 
                     return 1;
                 }));
+
+            // Register the /countdownstart command
+            dispatcher.register(CommandManager.literal("countdownstart")
+                .requires(source -> source.hasPermissionLevel(2)) // Requires operator permission
+                .executes(context -> {
+                    ServerCommandSource source = context.getSource();
+
+                    if (countdownManager != null) {
+                        countdownManager.start();
+                        source.sendFeedback(() -> Text.literal("Countdown timer started from 0.").formatted(Formatting.GREEN), true);
+                    } else {
+                        source.sendError(Text.literal("Countdown manager is not initialized."));
+                    }
+
+                    return 1;
+                }));
         });
 
-        // Initialize damage feed manager when server starts
+        // Initialize damage feed manager and countdown manager when server starts
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             damageFeedManager = new DamageFeedManager(server);
+            countdownManager = new CountdownManager(server);
         });
 
-        // Clear damage feed manager when server stops
+        // Clear damage feed manager and countdown manager when server stops
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             if (damageFeedManager != null) {
                 damageFeedManager.clearFeed();
                 damageFeedManager = null;
+            }
+            if (countdownManager != null) {
+                countdownManager.stop();
+                countdownManager = null;
             }
         });
 
@@ -72,6 +94,10 @@ public class SharedHealth implements ModInitializer {
             // Update damage feed manager
             if (damageFeedManager != null) {
                 damageFeedManager.tick();
+            }
+            // Update countdown manager
+            if (countdownManager != null) {
+                countdownManager.tick();
             }
 
             boolean currentHealthValue = world.getGameRules().getBoolean(SYNC_HEALTH);
