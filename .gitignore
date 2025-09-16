@@ -34,5 +34,8 @@ replay_*.log
 *.hprof
 *.jfr
 
+# allow mod jar in build/libs
+!build/libs/*.jar
+
 # docs
 docs/
