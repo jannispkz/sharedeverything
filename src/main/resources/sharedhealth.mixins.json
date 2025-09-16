@@ -9,6 +9,7 @@
     "HungerManagerMixin",
     "LivingEntityMixin",
     "PlayerEntityMixin",
+    "PlayerListEntryMixin",
     "SaturationStatusEffectMixin",
     "ServerPlayerEntityMixin",
     "StatusEffectMixin"

@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -37,6 +38,7 @@ public class SharedHealth implements ModInitializer {
     private static boolean lastHungerValue = true;
     private static boolean lastEnderPearlValue = true;
     private static boolean lastStatusEffectsValue = true;
+    private static int tabListUpdateCounter = 0;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
 
@@ -78,7 +80,7 @@ public class SharedHealth implements ModInitializer {
                             world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
 
                             // Reset all players
-                            for (net.minecraft.server.network.ServerPlayerEntity player : world.getPlayers()) {
+                            for (ServerPlayerEntity player : world.getPlayers()) {
                                 // Clear inventory
                                 player.getInventory().clear();
 
@@ -145,6 +147,28 @@ public class SharedHealth implements ModInitializer {
             // Update countdown manager
             if (countdownManager != null) {
                 countdownManager.tick();
+            }
+
+            // Update tab list every 3 seconds (60 ticks)
+            tabListUpdateCounter++;
+            if (tabListUpdateCounter >= 60) {
+                tabListUpdateCounter = 0;
+
+                // Collect all players from all dimensions
+                java.util.List<ServerPlayerEntity> allPlayers = new java.util.ArrayList<>();
+                for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+                    allPlayers.addAll(serverWorld.getPlayers());
+                }
+
+                // Send updates to all players about all players
+                for (ServerPlayerEntity player : allPlayers) {
+                    for (ServerPlayerEntity viewer : allPlayers) {
+                        viewer.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.PlayerListS2CPacket(
+                            net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME,
+                            player
+                        ));
+                    }
+                }
             }
 
             boolean currentHealthValue = world.getGameRules().getBoolean(SYNC_HEALTH);
