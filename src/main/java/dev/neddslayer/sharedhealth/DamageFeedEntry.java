@@ -49,7 +49,7 @@ public class DamageFeedEntry {
 
     public boolean isExpired() {
         if (isPlaceholder) return false;
-        return System.currentTimeMillis() - timestamp > 10000; // 10 seconds
+        return System.currentTimeMillis() - timestamp > 6000; // 6 seconds
     }
 
     public boolean isNew() {
@@ -60,7 +60,7 @@ public class DamageFeedEntry {
     public boolean isAboutToExpire() {
         if (isPlaceholder) return false;
         long age = System.currentTimeMillis() - timestamp;
-        return age > 8000; // Last 2 seconds (8-10 seconds)
+        return age > 4000; // Last 2 seconds (4-6 seconds)
     }
 
     public Text getFormattedText() {
@@ -81,7 +81,7 @@ public class DamageFeedEntry {
             formattedDamage,
             damageSource);
 
-        // Color based on age: red (< 1s), dark gray (8-10s), gray (1-8s)
+        // Color based on age: red (< 1s), dark gray (4-6s), gray (1-4s)
         if (isNew()) {
             return Text.literal(entryText).formatted(Formatting.RED);
         } else if (isAboutToExpire()) {
