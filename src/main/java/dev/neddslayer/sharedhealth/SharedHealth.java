@@ -26,10 +26,13 @@ public class SharedHealth implements ModInitializer {
             GameRuleRegistry.register("shareHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> SYNC_HUNGER =
             GameRuleRegistry.register("shareHunger", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
+    public static final GameRules.Key<GameRules.BooleanRule> SYNC_ENDER_PEARLS =
+            GameRuleRegistry.register("shareEnderPearls", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> LIMIT_HEALTH =
             GameRuleRegistry.register("limitHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     private static boolean lastHealthValue = true;
     private static boolean lastHungerValue = true;
+    private static boolean lastEnderPearlValue = true;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
 
@@ -118,6 +121,7 @@ public class SharedHealth implements ModInitializer {
 
             boolean currentHealthValue = world.getGameRules().getBoolean(SYNC_HEALTH);
             boolean currentHungerValue = world.getGameRules().getBoolean(SYNC_HUNGER);
+            boolean currentEnderPearlValue = world.getGameRules().getBoolean(SYNC_ENDER_PEARLS);
             boolean limitHealthValue = world.getGameRules().getBoolean(LIMIT_HEALTH);
             if (currentHealthValue != lastHealthValue && currentHealthValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareHealth.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
@@ -134,6 +138,14 @@ public class SharedHealth implements ModInitializer {
             else if (currentHungerValue != lastHungerValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareHunger.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
                 lastHungerValue = false;
+            }
+            if (currentEnderPearlValue != lastEnderPearlValue && currentEnderPearlValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareEnderPearls.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
+                lastEnderPearlValue = true;
+            }
+            else if (currentEnderPearlValue != lastEnderPearlValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareEnderPearls.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
+                lastEnderPearlValue = false;
             }
             if (world.getGameRules().getBoolean(SYNC_HEALTH)) {
                 SharedHealthComponent component = SHARED_HEALTH.get(world.getScoreboard());
