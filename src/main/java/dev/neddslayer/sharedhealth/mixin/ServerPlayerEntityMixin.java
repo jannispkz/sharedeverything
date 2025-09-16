@@ -72,20 +72,49 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
         // Kill all players
         world.getPlayers().forEach(p -> p.kill(world));
 
-        // Show death title and play sound to all players
+        // Show death title to all players
         net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED").formatted(net.minecraft.util.Formatting.RED);
-        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
-            for (ServerPlayerEntity player : serverWorld.getPlayers()) {
-                // Send title
-                player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(deathTitle));
-                player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(net.minecraft.text.Text.empty()));
-                player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
 
-                // Play bad sounds (wither spawn and music disc 13)
-                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN, net.minecraft.sound.SoundCategory.MASTER, 2.0f, 1.0f);
-                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.MUSIC_DISC_13.value(), net.minecraft.sound.SoundCategory.RECORDS, 0.5f, 1.0f);
+        // Schedule sounds and title to play after respawn (slight delay)
+        world.getServer().execute(() -> {
+            try {
+                Thread.sleep(100); // Small delay to ensure players have respawned
+            } catch (InterruptedException e) {
+                // Ignore
             }
-        }
+
+            for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+                for (ServerPlayerEntity player : serverWorld.getPlayers()) {
+                    // Send title
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(deathTitle));
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(net.minecraft.text.Text.empty()));
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
+
+                    // Play bad sounds directly to player (not at position)
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket(
+                        net.minecraft.registry.entry.RegistryEntry.of(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN),
+                        net.minecraft.sound.SoundCategory.MASTER,
+                        player.getX(),
+                        player.getY(),
+                        player.getZ(),
+                        2.0f,
+                        1.0f,
+                        player.getRandom().nextLong()
+                    ));
+
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket(
+                        net.minecraft.registry.entry.RegistryEntry.of(net.minecraft.sound.SoundEvents.MUSIC_DISC_13.value()),
+                        net.minecraft.sound.SoundCategory.RECORDS,
+                        player.getX(),
+                        player.getY(),
+                        player.getZ(),
+                        0.5f,
+                        1.0f,
+                        player.getRandom().nextLong()
+                    ));
+                }
+            }
+        });
 
         // Stop the countdown if it's running
         if (SharedHealth.countdownManager != null) {
