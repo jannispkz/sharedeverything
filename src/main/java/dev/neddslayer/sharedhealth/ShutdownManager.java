@@ -54,6 +54,11 @@ public class ShutdownManager {
         return isShuttingDown;
     }
 
+    public void forceImmediateShutdown() {
+        this.isShuttingDown = true;
+        deleteWorldAndStop();
+    }
+
     private void deleteWorldAndStop() {
         // Kick all players with reset message
         Text kickMessage = Text.literal("World is resetting, rejoin in like 15 seconds").formatted(net.minecraft.util.Formatting.YELLOW);

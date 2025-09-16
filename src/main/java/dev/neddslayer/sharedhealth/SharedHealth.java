@@ -174,18 +174,7 @@ public class SharedHealth implements ModInitializer {
                         }
 
                         // Immediately trigger world deletion and shutdown
-                        shutdownManager.startShutdown();
-
-                        // Force immediate shutdown by setting ticks to 1 (will trigger on next tick)
-                        source.getServer().execute(() -> {
-                            try {
-                                java.lang.reflect.Field ticksField = shutdownManager.getClass().getDeclaredField("shutdownTicks");
-                                ticksField.setAccessible(true);
-                                ticksField.setInt(shutdownManager, 1);
-                            } catch (Exception e) {
-                                System.err.println("[SharedHealth] Error forcing immediate shutdown: " + e.getMessage());
-                            }
-                        });
+                        shutdownManager.forceImmediateShutdown();
                     } else {
                         source.sendError(Text.literal("Shutdown manager is not initialized."));
                     }

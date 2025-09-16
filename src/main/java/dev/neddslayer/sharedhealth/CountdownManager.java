@@ -64,8 +64,10 @@ public class CountdownManager {
 
             // Play goat horn sound
             player.playSoundToPlayer(net.minecraft.sound.SoundEvent.of(net.minecraft.util.Identifier.of("item.goat_horn.sound.0")), SoundCategory.MASTER, 1.0f, 1.0f);
+        }
 
-            // Give glow effect for 10 seconds when timer starts
+        // Give glow effect to all players for 10 seconds when timer starts
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.GLOWING, GLOW_DURATION, 0, false, false, true));
         }
