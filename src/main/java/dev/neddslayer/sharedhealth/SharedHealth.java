@@ -102,6 +102,50 @@ public class SharedHealth implements ModInitializer {
 
                     return 1;
                 }));
+
+            // Register the /coords command
+            dispatcher.register(CommandManager.literal("coords")
+                .requires(source -> true) // Everyone can use this
+                .then(CommandManager.argument("label", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                    .executes(context -> {
+                        ServerCommandSource source = context.getSource();
+                        String label = com.mojang.brigadier.arguments.StringArgumentType.getString(context, "label");
+
+                        // Get player position
+                        if (source.getEntity() instanceof ServerPlayerEntity player) {
+                            int x = (int) Math.floor(player.getX());
+                            int y = (int) Math.floor(player.getY());
+                            int z = (int) Math.floor(player.getZ());
+                            String dimension = "";
+
+                            // Add dimension indicator
+                            if (player.getWorld().getRegistryKey().getValue().getPath().equals("the_nether")) {
+                                dimension = " [Nether]";
+                            } else if (player.getWorld().getRegistryKey().getValue().getPath().equals("the_end")) {
+                                dimension = " [End]";
+                            } else {
+                                dimension = " [Overworld]";
+                            }
+
+                            // Create the message with blue coordinates
+                            Text coordsMessage = Text.literal("")
+                                .append(Text.literal(String.format("%d, %d, %d", x, y, z)).formatted(Formatting.BLUE))
+                                .append(Text.literal(" [" + label + "]" + dimension).formatted(Formatting.GRAY));
+
+                            // Send to all players
+                            for (ServerPlayerEntity recipient : source.getServer().getPlayerManager().getPlayerList()) {
+                                recipient.sendMessage(coordsMessage, false);
+                            }
+                        } else {
+                            source.sendError(Text.literal("This command can only be run by players."));
+                        }
+
+                        return 1;
+                    }))
+                .executes(context -> {
+                    context.getSource().sendError(Text.literal("Usage: /coords <label>"));
+                    return 0;
+                }));
         });
 
         // Initialize managers when server starts
@@ -143,9 +187,9 @@ public class SharedHealth implements ModInitializer {
                 }
             }
 
-            // Update tab list every 3 seconds (60 ticks)
+            // Update tab list every 1 second (20 ticks)
             tabListUpdateCounter++;
-            if (tabListUpdateCounter >= 60) {
+            if (tabListUpdateCounter >= 20) {
                 tabListUpdateCounter = 0;
 
                 // Collect all players from all dimensions
