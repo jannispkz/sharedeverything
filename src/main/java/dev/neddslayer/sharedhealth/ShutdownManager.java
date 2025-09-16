@@ -38,7 +38,7 @@ public class ShutdownManager {
         // Only update the display every 20 ticks (1 second) to avoid spam
         if (shutdownTicks % 20 == 0 || shutdownTicks <= 20) {
             // Send red countdown to all players
-            Text shutdownMessage = Text.literal("Server stopping in: " + secondsLeft).formatted(Formatting.RED, Formatting.BOLD);
+            Text shutdownMessage = Text.literal("World resetting in: " + secondsLeft).formatted(Formatting.RED, Formatting.BOLD);
             server.getPlayerManager().getPlayerList().forEach(player -> {
                 player.sendMessage(shutdownMessage, true);
             });
