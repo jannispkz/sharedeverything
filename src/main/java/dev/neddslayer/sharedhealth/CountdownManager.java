@@ -16,7 +16,9 @@ public class CountdownManager {
     private boolean needsBlindnessApplication;
     private int blindnessDelayTicks;
     private static final int PRE_COUNTDOWN_DELAY = 100; // 5 seconds * 20 ticks
-    private static final int BLINDNESS_DURATION = 140; // 7 seconds * 20 ticks
+    private static final int BLINDNESS_DURATION = 120; // 6 seconds * 20 ticks
+    private static final int DEBUFF_DURATION = 100; // 5 seconds * 20 ticks
+    private static final int GLOW_DURATION = 200; // 10 seconds * 20 ticks
     private static final int BLINDNESS_DELAY = 10; // 0.5 seconds * 20 ticks
 
     public CountdownManager(MinecraftServer server) {
@@ -62,6 +64,10 @@ public class CountdownManager {
 
             // Play goat horn sound
             player.playSoundToPlayer(net.minecraft.sound.SoundEvent.of(net.minecraft.util.Identifier.of("item.goat_horn.sound.0")), SoundCategory.MASTER, 1.0f, 1.0f);
+
+            // Give glow effect for 10 seconds when timer starts
+            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                net.minecraft.entity.effect.StatusEffects.GLOWING, GLOW_DURATION, 0, false, false, true));
         }
     }
 
@@ -82,10 +88,14 @@ public class CountdownManager {
                 needsBlindnessApplication = false;
                 SharedHealth.isResettingPlayers = false; // Clear reset flag
 
-                // Apply blindness to all players
+                // Apply blindness, slowness, and mining fatigue to all players
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                     player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                         net.minecraft.entity.effect.StatusEffects.BLINDNESS, BLINDNESS_DURATION, 0, false, false, true));
+                    player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                        net.minecraft.entity.effect.StatusEffects.SLOWNESS, DEBUFF_DURATION, 10, false, false, true));
+                    player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                        net.minecraft.entity.effect.StatusEffects.MINING_FATIGUE, DEBUFF_DURATION, 10, false, false, true));
                 }
             }
             return;
