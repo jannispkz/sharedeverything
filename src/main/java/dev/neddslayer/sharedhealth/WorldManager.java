@@ -10,67 +10,122 @@ import net.minecraft.util.Identifier;
 public class WorldManager {
     private final MinecraftServer server;
     private boolean isCountingDown;
+    private boolean isCreatingDimensions;
     private int preCountdownTicks;
+    private int dimensionCreationStage;
+    private int dimensionCreationTicks;
     private String currentChallengeWorld;
     private static final int PRE_COUNTDOWN_DELAY = 100; // 5 seconds * 20 ticks
+    private static final int DIMENSION_DELAY = 40; // 2 seconds * 20 ticks
 
     public WorldManager(MinecraftServer server) {
         this.server = server;
         this.isCountingDown = false;
+        this.isCreatingDimensions = false;
         this.preCountdownTicks = 0;
+        this.dimensionCreationStage = 0;
+        this.dimensionCreationTicks = 0;
         this.currentChallengeWorld = null;
     }
 
     public void startWorldCreation() {
-        this.isCountingDown = true;
-        this.preCountdownTicks = PRE_COUNTDOWN_DELAY;
-
         // Create a unique world name with timestamp
         this.currentChallengeWorld = "challenge_" + System.currentTimeMillis();
 
-        // Create the new world using commands (executed by first available player)
+        // Start dimension creation process
+        this.isCreatingDimensions = true;
+        this.dimensionCreationStage = 0;
+        this.dimensionCreationTicks = 0;
+    }
+
+    public void tick() {
+        // Handle dimension creation first
+        if (isCreatingDimensions) {
+            dimensionCreationTicks++;
+
+            // Show progress based on stage
+            String[] stages = {"Creating Overworld...", "Creating Nether...", "Creating End..."};
+            if (dimensionCreationStage < stages.length) {
+                Text progressMessage = Text.literal(stages[dimensionCreationStage]).formatted(Formatting.AQUA, Formatting.BOLD);
+                server.getPlayerManager().getPlayerList().forEach(player -> {
+                    player.sendMessage(progressMessage, true);
+                });
+
+                // Create dimension after showing message for a moment
+                if (dimensionCreationTicks == 20) { // 1 second after showing message
+                    createDimension(dimensionCreationStage);
+                }
+
+                // Move to next stage after delay
+                if (dimensionCreationTicks >= DIMENSION_DELAY) {
+                    dimensionCreationStage++;
+                    dimensionCreationTicks = 0;
+
+                    // If all dimensions created, start teleport countdown
+                    if (dimensionCreationStage >= stages.length) {
+                        isCreatingDimensions = false;
+                        isCountingDown = true;
+                        preCountdownTicks = PRE_COUNTDOWN_DELAY;
+                    }
+                }
+            }
+            return;
+        }
+
+        // Handle teleport countdown
+        if (isCountingDown) {
+            preCountdownTicks--;
+
+            // Calculate seconds remaining
+            int secondsLeft = (preCountdownTicks + 19) / 20; // Round up
+
+            // Show countdown every second
+            if (preCountdownTicks % 20 == 0 && secondsLeft > 0) {
+                Text countdownMessage = Text.literal("Teleporting in: " + secondsLeft).formatted(Formatting.GOLD, Formatting.BOLD);
+                server.getPlayerManager().getPlayerList().forEach(player -> {
+                    player.sendMessage(countdownMessage, true);
+                    // Play tick sound
+                    player.playSoundToPlayer(net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value(), net.minecraft.sound.SoundCategory.MASTER, 1.0f, 1.0f);
+                });
+            }
+
+            // Teleport everyone when countdown reaches 0
+            if (preCountdownTicks <= 0) {
+                isCountingDown = false;
+                teleportAllPlayers();
+            }
+        }
+    }
+
+    private void createDimension(int stage) {
         ServerPlayerEntity firstPlayer = server.getPlayerManager().getPlayerList().isEmpty() ? null : server.getPlayerManager().getPlayerList().get(0);
         if (firstPlayer != null) {
             server.execute(() -> {
                 try {
-                    // Create world (skip difficulty setting as it's causing issues)
-                    server.getCommandManager().executeWithPrefix(
-                        firstPlayer.getCommandSource().withLevel(4),
-                        "mw create " + currentChallengeWorld + " NORMAL"
-                    );
-
-                    System.out.println("[SharedHealth] Created challenge world: " + currentChallengeWorld);
+                    switch (stage) {
+                        case 0: // Overworld
+                            server.getCommandManager().executeWithPrefix(
+                                firstPlayer.getCommandSource().withLevel(4),
+                                "mw create " + currentChallengeWorld + " NORMAL"
+                            );
+                            break;
+                        case 1: // Nether
+                            server.getCommandManager().executeWithPrefix(
+                                firstPlayer.getCommandSource().withLevel(4),
+                                "mw create " + currentChallengeWorld + "_nether NETHER"
+                            );
+                            break;
+                        case 2: // End
+                            server.getCommandManager().executeWithPrefix(
+                                firstPlayer.getCommandSource().withLevel(4),
+                                "mw create " + currentChallengeWorld + "_the_end END"
+                            );
+                            break;
+                    }
                 } catch (Exception e) {
-                    System.err.println("[SharedHealth] Error creating world: " + e.getMessage());
+                    System.err.println("[SharedHealth] Error creating dimension " + stage + ": " + e.getMessage());
                 }
             });
-        }
-    }
-
-    public void tick() {
-        if (!isCountingDown) {
-            return;
-        }
-
-        preCountdownTicks--;
-
-        // Calculate seconds remaining
-        int secondsLeft = (preCountdownTicks + 19) / 20; // Round up
-
-        // Show countdown every second
-        if (preCountdownTicks % 20 == 0 && secondsLeft > 0) {
-            Text countdownMessage = Text.literal("Teleporting in: " + secondsLeft).formatted(Formatting.GOLD, Formatting.BOLD);
-            server.getPlayerManager().getPlayerList().forEach(player -> {
-                player.sendMessage(countdownMessage, true);
-                // Play tick sound
-                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value(), net.minecraft.sound.SoundCategory.MASTER, 1.0f, 1.0f);
-            });
-        }
-
-        // Teleport everyone when countdown reaches 0
-        if (preCountdownTicks <= 0) {
-            isCountingDown = false;
-            teleportAllPlayers();
         }
     }
 
@@ -79,7 +134,22 @@ public class WorldManager {
             return;
         }
 
-        // Teleport each player directly to the world (let multiworld handle spawn)
+        // Disable fall damage once for all players
+        ServerPlayerEntity firstPlayer = server.getPlayerManager().getPlayerList().isEmpty() ? null : server.getPlayerManager().getPlayerList().get(0);
+        if (firstPlayer != null) {
+            server.execute(() -> {
+                try {
+                    server.getCommandManager().executeWithPrefix(
+                        firstPlayer.getCommandSource(),
+                        "gamerule fallDamage false"
+                    );
+                } catch (Exception e) {
+                    System.err.println("[SharedHealth] Error disabling fall damage: " + e.getMessage());
+                }
+            });
+        }
+
+        // Teleport each player to the world
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             final String playerName = player.getName().getString();
             server.execute(() -> {
@@ -90,20 +160,35 @@ public class WorldManager {
                         "mw tp " + currentChallengeWorld
                     );
 
-                    // Wait a bit then teleport to surface at 0,0
+                    // Wait a bit then teleport to height 500
                     server.execute(() -> {
                         try {
-                            Thread.sleep(500); // Longer delay for world to fully load
+                            Thread.sleep(500); // Delay for world to fully load
                             server.getCommandManager().executeWithPrefix(
                                 player.getCommandSource(),
-                                "tp 0 100 0"
+                                "tp 0 500 0"
                             );
                         } catch (Exception e) {
-                            System.err.println("[SharedHealth] Error setting surface position for " + playerName + ": " + e.getMessage());
+                            System.err.println("[SharedHealth] Error setting position for " + playerName + ": " + e.getMessage());
                         }
                     });
                 } catch (Exception e) {
                     System.err.println("[SharedHealth] Error teleporting player " + playerName + ": " + e.getMessage());
+                }
+            });
+        }
+
+        // Re-enable fall damage after 25 seconds
+        if (firstPlayer != null) {
+            server.execute(() -> {
+                try {
+                    Thread.sleep(25000); // 25 seconds
+                    server.getCommandManager().executeWithPrefix(
+                        firstPlayer.getCommandSource(),
+                        "gamerule fallDamage true"
+                    );
+                } catch (Exception e) {
+                    System.err.println("[SharedHealth] Error re-enabling fall damage: " + e.getMessage());
                 }
             });
         }
@@ -133,9 +218,12 @@ public class WorldManager {
             });
         }
 
-        // Since delete is console-only, we'll just leave the world for now
-        // The multiworld mod will handle cleanup, and the world name is unique each time
-        System.out.println("[SharedHealth] Players returned to overworld. Challenge world " + currentChallengeWorld + " left for manual cleanup.");
+        // Since delete is console-only, we'll leave the worlds for manual cleanup
+        // The worlds have unique timestamp names so they won't conflict
+        System.out.println("[SharedHealth] Players returned to overworld. Challenge worlds left for manual cleanup:");
+        System.out.println("[SharedHealth] /mw delete " + currentChallengeWorld);
+        System.out.println("[SharedHealth] /mw delete " + currentChallengeWorld + "_nether");
+        System.out.println("[SharedHealth] /mw delete " + currentChallengeWorld + "_the_end");
 
         currentChallengeWorld = null;
     }

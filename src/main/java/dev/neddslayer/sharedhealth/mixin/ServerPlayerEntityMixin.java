@@ -87,8 +87,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             deathSummaryShown = false;
         }
 
-        // Kill all players
-        world.getPlayers().forEach(p -> p.kill(world));
+        // Kill all players (use list copy to avoid concurrent modification)
+        java.util.List<ServerPlayerEntity> players = new java.util.ArrayList<>(world.getPlayers());
+        players.forEach(p -> p.kill(world));
 
         // Show death title to all players
         net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED").formatted(net.minecraft.util.Formatting.RED);
