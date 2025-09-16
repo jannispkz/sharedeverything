@@ -29,24 +29,26 @@ public class CountdownManager {
         this.isPreCountdown = true;
         this.preCountdownTicks = PRE_COUNTDOWN_DELAY;
 
-        // Kill all players silently to reset them at spawn, then give blindness
+        // Kill all players silently to reset them at spawn
         SharedHealth.isResettingPlayers = true;
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             // Use generic damage source that doesn't show death message
             player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
         }
-        SharedHealth.isResettingPlayers = false;
 
-        // Give all players blindness for 7 seconds after respawn
+        // Give all players blindness after they respawn (longer delay to ensure respawn completes)
         server.execute(() -> {
             try {
-                Thread.sleep(100); // Small delay to ensure respawn
+                Thread.sleep(500); // Longer delay to ensure respawn is complete
+                SharedHealth.isResettingPlayers = false; // Clear flag after respawn
+
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
                     player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                         net.minecraft.entity.effect.StatusEffects.BLINDNESS, BLINDNESS_DURATION, 0, false, false, true));
                 }
             } catch (Exception e) {
                 System.err.println("[SharedHealth] Error applying blindness: " + e.getMessage());
+                SharedHealth.isResettingPlayers = false; // Make sure flag gets cleared
             }
         });
     }
