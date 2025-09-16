@@ -152,11 +152,19 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
                     int damageTaken = statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.DAMAGE_TAKEN)) / 10;
                     int mobsKilled = statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.MOB_KILLS));
 
+                    // Calculate total blocks mined by iterating through all blocks
+                    int blocksMined = 0;
+                    for (net.minecraft.block.Block block : net.minecraft.registry.Registries.BLOCK) {
+                        blocksMined += statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.MINED.getOrCreateStat(block));
+                    }
+
                     // Send compact stats line
                     player.sendMessage(net.minecraft.text.Text.literal("")
                         .append(statPlayer.getName().copy().formatted(net.minecraft.util.Formatting.YELLOW))
                         .append(net.minecraft.text.Text.literal(" - ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
                         .append(net.minecraft.text.Text.literal(totalDistance + "m").formatted(net.minecraft.util.Formatting.WHITE))
+                        .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+                        .append(net.minecraft.text.Text.literal(blocksMined + " mined").formatted(net.minecraft.util.Formatting.AQUA))
                         .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
                         .append(net.minecraft.text.Text.literal(damageTaken + "♥").formatted(net.minecraft.util.Formatting.RED))
                         .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
