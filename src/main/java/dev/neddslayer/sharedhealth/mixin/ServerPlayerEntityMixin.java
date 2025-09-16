@@ -82,8 +82,8 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
                 player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
 
                 // Play bad sounds (wither spawn and music disc 13)
-                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN, net.minecraft.sound.SoundCategory.MASTER, 1.0f, 1.0f);
-                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.MUSIC_DISC_13.value(), net.minecraft.sound.SoundCategory.RECORDS, 1.0f, 1.0f);
+                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN, net.minecraft.sound.SoundCategory.MASTER, 2.0f, 1.0f);
+                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.MUSIC_DISC_13.value(), net.minecraft.sound.SoundCategory.RECORDS, 0.5f, 1.0f);
             }
         }
 

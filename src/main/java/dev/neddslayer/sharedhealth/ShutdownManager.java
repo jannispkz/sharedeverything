@@ -31,11 +31,14 @@ public class ShutdownManager {
         // Calculate seconds remaining
         int secondsLeft = (shutdownTicks + 19) / 20; // Round up
 
-        // Send red countdown to all players
-        Text shutdownMessage = Text.literal("Server stopping in: " + secondsLeft).formatted(Formatting.RED, Formatting.BOLD);
-        server.getPlayerManager().getPlayerList().forEach(player -> {
-            player.sendMessage(shutdownMessage, true);
-        });
+        // Only update the display every 20 ticks (1 second) to avoid spam
+        if (shutdownTicks % 20 == 0 || shutdownTicks <= 20) {
+            // Send red countdown to all players
+            Text shutdownMessage = Text.literal("Server stopping in: " + secondsLeft).formatted(Formatting.RED, Formatting.BOLD);
+            server.getPlayerManager().getPlayerList().forEach(player -> {
+                player.sendMessage(shutdownMessage, true);
+            });
+        }
 
         // Stop the server when countdown reaches 0
         if (shutdownTicks <= 0) {

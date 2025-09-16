@@ -127,17 +127,20 @@ public class SharedHealth implements ModInitializer {
         });
 
         ServerTickEvents.END_WORLD_TICK.register((world -> {
-            // Update damage feed manager
-            if (damageFeedManager != null) {
-                damageFeedManager.tick();
-            }
-            // Update countdown manager
-            if (countdownManager != null) {
-                countdownManager.tick();
-            }
-            // Update shutdown manager
-            if (shutdownManager != null) {
-                shutdownManager.tick();
+            // Only tick managers once per server tick (check if this is the overworld)
+            if (world.getRegistryKey() == net.minecraft.world.World.OVERWORLD) {
+                // Update damage feed manager
+                if (damageFeedManager != null) {
+                    damageFeedManager.tick();
+                }
+                // Update countdown manager
+                if (countdownManager != null) {
+                    countdownManager.tick();
+                }
+                // Update shutdown manager
+                if (shutdownManager != null) {
+                    shutdownManager.tick();
+                }
             }
 
             // Update tab list every 3 seconds (60 ticks)
