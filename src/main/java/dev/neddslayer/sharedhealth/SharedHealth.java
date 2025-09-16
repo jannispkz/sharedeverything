@@ -70,6 +70,22 @@ public class SharedHealth implements ModInitializer {
 
                     return 1;
                 }));
+
+            // Register the /countdownstop command
+            dispatcher.register(CommandManager.literal("countdownstop")
+                .requires(source -> source.hasPermissionLevel(2)) // Requires operator permission
+                .executes(context -> {
+                    ServerCommandSource source = context.getSource();
+
+                    if (countdownManager != null) {
+                        countdownManager.stop();
+                        source.sendFeedback(() -> Text.literal("Countdown timer stopped.").formatted(Formatting.RED), true);
+                    } else {
+                        source.sendError(Text.literal("Countdown manager is not initialized."));
+                    }
+
+                    return 1;
+                }));
         });
 
         // Initialize damage feed manager and countdown manager when server starts
