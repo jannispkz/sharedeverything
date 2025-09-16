@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
@@ -66,7 +67,15 @@ public class SharedHealth implements ModInitializer {
 
                     if (countdownManager != null) {
                         countdownManager.start();
+
+                        // Set time to day and clear weather
+                        for (ServerWorld world : source.getServer().getWorlds()) {
+                            world.setTimeOfDay(1000); // Set to day (1000 ticks = morning)
+                            world.resetWeather(); // Clear weather
+                        }
+
                         source.sendFeedback(() -> Text.literal("Countdown timer started from 0.").formatted(Formatting.GREEN), true);
+                        source.sendFeedback(() -> Text.literal("Time set to day and weather cleared.").formatted(Formatting.YELLOW), true);
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
                     }
