@@ -67,9 +67,33 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 
     @Inject(method = "onDeath", at = @At("TAIL"))
     public void killEveryoneOnDeath(DamageSource damageSource, CallbackInfo ci) {
-        this.getServerWorld().getPlayers().forEach(p -> p.kill(this.getServerWorld()));
+        ServerWorld world = this.getServerWorld();
+
+        // Kill all players
+        world.getPlayers().forEach(p -> p.kill(world));
+
+        // Show death title and play sound to all players
+        net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED OMG").formatted(net.minecraft.util.Formatting.RED);
+        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+            for (ServerPlayerEntity player : serverWorld.getPlayers()) {
+                // Send title
+                player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(deathTitle));
+                player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(net.minecraft.text.Text.empty()));
+                player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
+
+                // Play bad sound (wither spawn sound is ominous)
+                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN, net.minecraft.sound.SoundCategory.MASTER, 1.0f, 1.0f);
+            }
+        }
+
+        // Stop the countdown if it's running
+        if (SharedHealth.countdownManager != null) {
+            SharedHealth.countdownManager.stop();
+        }
+
+        // Reset shared components
         SHARED_HEALTH.get(this.getScoreboard()).setHealth(20.0f);
         SHARED_HUNGER.get(this.getScoreboard()).setHunger(20);
-		SHARED_SATURATION.get(this.getScoreboard()).setSaturation(20.0f);
+        SHARED_SATURATION.get(this.getScoreboard()).setSaturation(20.0f);
     }
 }
