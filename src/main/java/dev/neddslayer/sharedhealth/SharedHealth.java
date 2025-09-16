@@ -45,6 +45,7 @@ public class SharedHealth implements ModInitializer {
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
     public static ShutdownManager shutdownManager;
+    public static WorldManager worldManager;
 
     /**
      * Runs the mod initializer.
@@ -74,10 +75,11 @@ public class SharedHealth implements ModInitializer {
                 .executes(context -> {
                     ServerCommandSource source = context.getSource();
 
-                    if (countdownManager != null) {
-                        countdownManager.start();
+                    if (countdownManager != null && worldManager != null) {
+                        // Start world creation and 5-second countdown (timer will start after teleport)
+                        worldManager.startWorldCreation();
 
-                        // Set time to day and clear weather
+                        // Set time to day and clear weather in all worlds
                         for (ServerWorld world : source.getServer().getWorlds()) {
                             world.setTimeOfDay(1000); // Set to day (1000 ticks = morning)
                             world.resetWeather(); // Clear weather
@@ -156,6 +158,7 @@ public class SharedHealth implements ModInitializer {
             damageFeedManager = new DamageFeedManager(server);
             countdownManager = new CountdownManager(server);
             shutdownManager = new ShutdownManager(server);
+            worldManager = new WorldManager(server);
         });
 
         // Clear managers when server stops
@@ -170,6 +173,9 @@ public class SharedHealth implements ModInitializer {
             }
             if (shutdownManager != null) {
                 shutdownManager = null;
+            }
+            if (worldManager != null) {
+                worldManager = null;
             }
         });
 
@@ -187,6 +193,10 @@ public class SharedHealth implements ModInitializer {
                 // Update shutdown manager
                 if (shutdownManager != null) {
                     shutdownManager.tick();
+                }
+                // Update world manager
+                if (worldManager != null) {
+                    worldManager.tick();
                 }
             }
 

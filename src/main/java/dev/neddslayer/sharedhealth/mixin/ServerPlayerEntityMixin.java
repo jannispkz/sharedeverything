@@ -103,7 +103,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
                     player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(net.minecraft.text.Text.empty()));
                     player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
 
-                    // Play bad sounds directly to player (not at position)
+                    // Play wither spawn sound directly to player (not at position)
                     player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket(
                         net.minecraft.registry.entry.RegistryEntry.of(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN),
                         net.minecraft.sound.SoundCategory.MASTER,
@@ -111,17 +111,6 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
                         player.getY(),
                         player.getZ(),
                         2.0f,
-                        1.0f,
-                        player.getRandom().nextLong()
-                    ));
-
-                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket(
-                        net.minecraft.registry.entry.RegistryEntry.of(net.minecraft.sound.SoundEvents.MUSIC_DISC_13.value()),
-                        net.minecraft.sound.SoundCategory.RECORDS,
-                        player.getX(),
-                        player.getY(),
-                        player.getZ(),
-                        0.5f,
                         1.0f,
                         player.getRandom().nextLong()
                     ));
@@ -175,9 +164,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             }
         }
 
-        // Start shutdown countdown
-        if (SharedHealth.shutdownManager != null) {
-            SharedHealth.shutdownManager.startShutdown();
+        // Delete the challenge world instead of shutting down server
+        if (SharedHealth.worldManager != null) {
+            SharedHealth.worldManager.deleteCurrentWorld();
         }
 
         // Reset shared components
