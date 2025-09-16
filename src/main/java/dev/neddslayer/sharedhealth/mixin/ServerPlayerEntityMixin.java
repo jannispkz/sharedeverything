@@ -72,6 +72,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     public void killEveryoneOnDeath(DamageSource damageSource, CallbackInfo ci) {
         ServerWorld world = this.getServerWorld();
 
+        // Check if this is a reset death - if so, ignore it
+        if (SharedHealth.isResettingPlayers) {
+            return; // This is a countdown reset death, ignore
+        }
+
         // Check if countdown is running - if not, just do normal death
         if (SharedHealth.countdownManager == null || !SharedHealth.countdownManager.isActive()) {
             return; // Normal death, no special effects

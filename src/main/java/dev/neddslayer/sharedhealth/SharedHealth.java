@@ -45,6 +45,7 @@ public class SharedHealth implements ModInitializer {
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
     public static ShutdownManager shutdownManager;
+    public static boolean isResettingPlayers = false;
 
     /**
      * Runs the mod initializer.

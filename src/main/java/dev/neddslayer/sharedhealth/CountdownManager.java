@@ -30,10 +30,12 @@ public class CountdownManager {
         this.preCountdownTicks = PRE_COUNTDOWN_DELAY;
 
         // Kill all players silently to reset them at spawn, then give blindness
+        SharedHealth.isResettingPlayers = true;
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             // Use generic damage source that doesn't show death message
             player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
         }
+        SharedHealth.isResettingPlayers = false;
 
         // Give all players blindness for 7 seconds after respawn
         server.execute(() -> {
