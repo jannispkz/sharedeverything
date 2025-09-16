@@ -170,9 +170,9 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             }
         }
 
-        // Delete the challenge world instead of shutting down server
-        if (SharedHealth.worldManager != null) {
-            SharedHealth.worldManager.deleteCurrentWorld();
+        // Start shutdown countdown with world deletion
+        if (SharedHealth.shutdownManager != null) {
+            SharedHealth.shutdownManager.startShutdown();
         }
 
         // Reset shared components
