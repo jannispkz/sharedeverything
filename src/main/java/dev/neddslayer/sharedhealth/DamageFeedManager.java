@@ -4,7 +4,6 @@ import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 import java.util.*;
 
@@ -21,10 +20,7 @@ public class DamageFeedManager {
     public DamageFeedManager(MinecraftServer server) {
         this.server = server;
         initializeScoreboard();
-        // Initialize with placeholder entries
-        for (int i = 0; i < MAX_ENTRIES; i++) {
-            entries.add(new DamageFeedEntry());
-        }
+        // Don't add placeholders initially - scoreboard starts hidden
         updateScoreboard();
     }
 
@@ -39,7 +35,7 @@ public class DamageFeedManager {
         damageObjective = scoreboard.addObjective(
             OBJECTIVE_NAME,
             ScoreboardCriterion.DUMMY,
-            Text.literal("Damage").formatted(Formatting.RED, Formatting.BOLD),
+            Text.literal(""), // No header
             ScoreboardCriterion.RenderType.INTEGER,
             false,
             BlankNumberFormat.INSTANCE
@@ -51,30 +47,9 @@ public class DamageFeedManager {
     public void addDamageEntry(String playerName, float damageAmount, String damageSource) {
         DamageFeedEntry newEntry = new DamageFeedEntry(playerName, damageAmount, damageSource);
 
-        // Remove oldest non-placeholder entry if we're at max real entries
-        int realEntryCount = 0;
-        for (DamageFeedEntry entry : entries) {
-            if (!entry.isPlaceholder()) {
-                realEntryCount++;
-            }
-        }
-
-        if (realEntryCount >= MAX_ENTRIES) {
-            // Remove the oldest non-placeholder entry
-            for (int i = entries.size() - 1; i >= 0; i--) {
-                if (!entries.get(i).isPlaceholder()) {
-                    entries.remove(i);
-                    break;
-                }
-            }
-        } else {
-            // Remove a placeholder from the end
-            for (int i = entries.size() - 1; i >= 0; i--) {
-                if (entries.get(i).isPlaceholder()) {
-                    entries.remove(i);
-                    break;
-                }
-            }
+        // Remove oldest entry if we're at max entries
+        if (entries.size() >= MAX_ENTRIES) {
+            entries.removeLast();
         }
 
         // Add new entry at the beginning
@@ -91,24 +66,15 @@ public class DamageFeedManager {
         }
         lastUpdateTime = currentTime;
 
-        // Remove expired entries and replace with placeholders
-        for (int i = 0; i < entries.size(); i++) {
-            DamageFeedEntry entry = entries.get(i);
-            if (!entry.isPlaceholder() && entry.isExpired()) {
-                entries.set(i, new DamageFeedEntry());
-            }
-        }
+        // Remove expired entries completely
+        int sizeBefore = entries.size();
+        entries.removeIf(entry -> !entry.isPlaceholder() && entry.isExpired());
+        boolean hasChanges = entries.size() != sizeBefore;
 
-        // Ensure we always have exactly MAX_ENTRIES
-        while (entries.size() < MAX_ENTRIES) {
-            entries.add(new DamageFeedEntry());
+        // Always update to handle color transitions or if entries were removed
+        if (hasChanges || !entries.isEmpty()) {
+            updateScoreboard();
         }
-        while (entries.size() > MAX_ENTRIES) {
-            entries.removeLast();
-        }
-
-        // Always update to handle color transitions
-        updateScoreboard();
     }
 
     private void updateScoreboard() {
@@ -121,10 +87,20 @@ public class DamageFeedManager {
         }
         slotToScoreHolderMap.clear();
 
+        // If no entries, scoreboard will be empty (hidden)
+        if (entries.isEmpty()) {
+            return;
+        }
+
         // Add entries with proper ordering
         int score = MAX_ENTRIES;
         for (int i = 0; i < entries.size() && i < MAX_ENTRIES; i++) {
             DamageFeedEntry entry = entries.get(i);
+
+            // Skip placeholder entries
+            if (entry.isPlaceholder()) {
+                continue;
+            }
 
             // Use unique invisible characters for each slot to maintain order
             String uniqueHolder = generateUniqueHolder(i);
@@ -158,11 +134,7 @@ public class DamageFeedManager {
         }
         entries.clear();
         slotToScoreHolderMap.clear();
-
-        // Re-add placeholders
-        for (int i = 0; i < MAX_ENTRIES; i++) {
-            entries.add(new DamageFeedEntry());
-        }
+        // Don't add placeholders - let scoreboard disappear
         updateScoreboard();
     }
 }

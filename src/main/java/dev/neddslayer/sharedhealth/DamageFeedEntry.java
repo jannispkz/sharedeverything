@@ -27,10 +27,6 @@ public class DamageFeedEntry {
         this.isPlaceholder = true;
     }
 
-    // Static width padding string (invisible spaces to maintain consistent width)
-    // Minecraft names max 16 chars, so "PlayerName16Char took 999 damage from PlayerName16Char" = ~55 chars
-    private static final String WIDTH_PADDING = "                                                            "; // 60 spaces
-
     public String getPlayerName() {
         return playerName;
     }
@@ -69,8 +65,8 @@ public class DamageFeedEntry {
 
     public Text getFormattedText() {
         if (isPlaceholder) {
-            // Return invisible padding to maintain scoreboard width
-            return Text.literal(WIDTH_PADDING).formatted(Formatting.BLACK);
+            // Should never be displayed now
+            return Text.literal("");
         }
 
         String formattedDamage;
@@ -84,11 +80,6 @@ public class DamageFeedEntry {
             playerName,
             formattedDamage,
             damageSource);
-
-        // Pad the text to a consistent width
-        if (entryText.length() < WIDTH_PADDING.length()) {
-            entryText = entryText + WIDTH_PADDING.substring(entryText.length());
-        }
 
         // Color based on age: red (< 1s), dark gray (8-10s), gray (1-8s)
         if (isNew()) {
