@@ -166,6 +166,38 @@ public class SharedHealth implements ModInitializer {
                     context.getSource().sendError(Text.literal("Usage: /coords <label>"));
                     return 0;
                 }));
+
+            // Register the /reset command
+            dispatcher.register(CommandManager.literal("reset")
+                .requires(source -> true) // Anyone can use this
+                .executes(context -> {
+                    ServerCommandSource source = context.getSource();
+
+                    if (shutdownManager != null) {
+                        // Show message to all players
+                        Text resetMessage = Text.literal("Server resetting immediately!").formatted(Formatting.RED, Formatting.BOLD);
+                        for (ServerPlayerEntity player : source.getServer().getPlayerManager().getPlayerList()) {
+                            player.sendMessage(resetMessage, false);
+                        }
+
+                        // Immediately trigger world deletion and shutdown
+                        shutdownManager.startShutdown();
+                        // Force immediate shutdown (set ticks to 0)
+                        java.lang.reflect.Field ticksField;
+                        try {
+                            ticksField = shutdownManager.getClass().getDeclaredField("shutdownTicks");
+                            ticksField.setAccessible(true);
+                            ticksField.setInt(shutdownManager, 0);
+                        } catch (Exception e) {
+                            // Fallback: just stop server directly
+                            source.getServer().stop(false);
+                        }
+                    } else {
+                        source.sendError(Text.literal("Shutdown manager is not initialized."));
+                    }
+
+                    return 1;
+                }));
         });
 
         // Initialize managers when server starts
