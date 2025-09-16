@@ -5,12 +5,15 @@ import dev.neddslayer.sharedhealth.components.SharedHealthComponent;
 import dev.neddslayer.sharedhealth.components.SharedHungerComponent;
 import dev.neddslayer.sharedhealth.components.SharedSaturationComponent;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
@@ -34,6 +37,24 @@ public class SharedHealth implements ModInitializer {
      */
     @Override
     public void onInitialize() {
+        // Register the /resetscoreboard command
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            dispatcher.register(CommandManager.literal("resetscoreboard")
+                .requires(source -> source.hasPermissionLevel(2)) // Requires operator permission
+                .executes(context -> {
+                    ServerCommandSource source = context.getSource();
+
+                    if (damageFeedManager != null) {
+                        damageFeedManager.clearFeed();
+                        source.sendFeedback(() -> Text.literal("Damage scoreboard has been reset.").formatted(Formatting.GREEN), true);
+                    } else {
+                        source.sendError(Text.literal("Damage scoreboard is not initialized."));
+                    }
+
+                    return 1;
+                }));
+        });
+
         // Initialize damage feed manager when server starts
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             damageFeedManager = new DamageFeedManager(server);

@@ -54,7 +54,13 @@ public class DamageFeedEntry {
 
     public boolean isNew() {
         if (isPlaceholder) return false;
-        return System.currentTimeMillis() - timestamp < 2000; // 2 seconds
+        return System.currentTimeMillis() - timestamp < 1000; // 1 second
+    }
+
+    public boolean isAboutToExpire() {
+        if (isPlaceholder) return false;
+        long age = System.currentTimeMillis() - timestamp;
+        return age > 8000; // Last 2 seconds (8-10 seconds)
     }
 
     public Text getFormattedText() {
@@ -74,9 +80,11 @@ public class DamageFeedEntry {
             damageSource,
             playerName);
 
-        // Return red text if new (< 2 seconds), gray otherwise
+        // Color based on age: red (< 1s), dark gray (8-10s), gray (1-8s)
         if (isNew()) {
             return Text.literal(entryText).formatted(Formatting.RED);
+        } else if (isAboutToExpire()) {
+            return Text.literal(entryText).formatted(Formatting.DARK_GRAY);
         } else {
             return Text.literal(entryText).formatted(Formatting.GRAY);
         }
