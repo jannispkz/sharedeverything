@@ -83,14 +83,21 @@ public class WorldManager {
             return;
         }
 
-        // Teleport each player individually using their own command source
+        // First teleport players to the world, then fix their position to surface
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             server.execute(() -> {
                 try {
-                    // Each player teleports themselves to avoid permission issues
+                    // Teleport to world first
                     server.getCommandManager().executeWithPrefix(
                         player.getCommandSource(),
                         "mw tp " + currentChallengeWorld
+                    );
+
+                    // Then teleport to surface at 0,0 to avoid caves
+                    Thread.sleep(100); // Small delay to ensure world load
+                    server.getCommandManager().executeWithPrefix(
+                        player.getCommandSource(),
+                        "tp 0 ~ 0"
                     );
                 } catch (Exception e) {
                     System.err.println("[SharedHealth] Error teleporting player " + player.getName().getString() + ": " + e.getMessage());
