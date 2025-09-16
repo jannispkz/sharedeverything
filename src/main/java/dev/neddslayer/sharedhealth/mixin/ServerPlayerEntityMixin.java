@@ -121,35 +121,33 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             SharedHealth.countdownManager.stop();
         }
 
-        // Send death summary statistics
-        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
-            for (ServerPlayerEntity player : serverWorld.getPlayers()) {
-                // Send summary header
-                player.sendMessage(net.minecraft.text.Text.literal("════════════════════════════════").formatted(net.minecraft.util.Formatting.DARK_GRAY), false);
-                player.sendMessage(net.minecraft.text.Text.literal("DEATH SUMMARY").formatted(net.minecraft.util.Formatting.RED, net.minecraft.util.Formatting.BOLD), false);
-                player.sendMessage(net.minecraft.text.Text.literal("════════════════════════════════").formatted(net.minecraft.util.Formatting.DARK_GRAY), false);
+        // Send death summary statistics to all players (once)
+        for (ServerPlayerEntity player : world.getServer().getPlayerManager().getPlayerList()) {
+            // Send summary header
+            player.sendMessage(net.minecraft.text.Text.literal("════════════════════════════════").formatted(net.minecraft.util.Formatting.DARK_GRAY), false);
+            player.sendMessage(net.minecraft.text.Text.literal("DEATH SUMMARY").formatted(net.minecraft.util.Formatting.RED, net.minecraft.util.Formatting.BOLD), false);
+            player.sendMessage(net.minecraft.text.Text.literal("════════════════════════════════").formatted(net.minecraft.util.Formatting.DARK_GRAY), false);
 
-                // Show stats for each player (compact single line)
-                for (ServerPlayerEntity statPlayer : world.getServer().getPlayerManager().getPlayerList()) {
-                    // Get statistics
-                    int totalDistance = (statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.WALK_ONE_CM)) +
-                                        statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.SPRINT_ONE_CM))) / 100;
-                    int damageTaken = statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.DAMAGE_TAKEN)) / 10;
-                    int mobsKilled = statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.MOB_KILLS));
+            // Show stats for each player (compact single line)
+            for (ServerPlayerEntity statPlayer : world.getServer().getPlayerManager().getPlayerList()) {
+                // Get statistics
+                int totalDistance = (statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.WALK_ONE_CM)) +
+                                    statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.SPRINT_ONE_CM))) / 100;
+                int damageTaken = statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.DAMAGE_TAKEN)) / 10;
+                int mobsKilled = statPlayer.getStatHandler().getStat(net.minecraft.stat.Stats.CUSTOM.getOrCreateStat(net.minecraft.stat.Stats.MOB_KILLS));
 
-                    // Send compact stats line
-                    player.sendMessage(net.minecraft.text.Text.literal("")
-                        .append(statPlayer.getName().copy().formatted(net.minecraft.util.Formatting.YELLOW))
-                        .append(net.minecraft.text.Text.literal(" - ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
-                        .append(net.minecraft.text.Text.literal(totalDistance + "m").formatted(net.minecraft.util.Formatting.WHITE))
-                        .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
-                        .append(net.minecraft.text.Text.literal(damageTaken + "♥").formatted(net.minecraft.util.Formatting.RED))
-                        .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
-                        .append(net.minecraft.text.Text.literal(mobsKilled + " kills").formatted(net.minecraft.util.Formatting.GREEN)), false);
-                }
-
-                player.sendMessage(net.minecraft.text.Text.literal("════════════════════════════════").formatted(net.minecraft.util.Formatting.DARK_GRAY), false);
+                // Send compact stats line
+                player.sendMessage(net.minecraft.text.Text.literal("")
+                    .append(statPlayer.getName().copy().formatted(net.minecraft.util.Formatting.YELLOW))
+                    .append(net.minecraft.text.Text.literal(" - ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+                    .append(net.minecraft.text.Text.literal(totalDistance + "m").formatted(net.minecraft.util.Formatting.WHITE))
+                    .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+                    .append(net.minecraft.text.Text.literal(damageTaken + "♥").formatted(net.minecraft.util.Formatting.RED))
+                    .append(net.minecraft.text.Text.literal(" | ").formatted(net.minecraft.util.Formatting.DARK_GRAY))
+                    .append(net.minecraft.text.Text.literal(mobsKilled + " kills").formatted(net.minecraft.util.Formatting.GREEN)), false);
             }
+
+            player.sendMessage(net.minecraft.text.Text.literal("════════════════════════════════").formatted(net.minecraft.util.Formatting.DARK_GRAY), false);
         }
 
         // Start shutdown countdown
