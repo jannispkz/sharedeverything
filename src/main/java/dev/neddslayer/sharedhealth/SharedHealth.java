@@ -48,6 +48,11 @@ public class SharedHealth implements ModInitializer {
         });
 
         ServerTickEvents.END_WORLD_TICK.register((world -> {
+            // Update damage feed manager
+            if (damageFeedManager != null) {
+                damageFeedManager.tick();
+            }
+
             boolean currentHealthValue = world.getGameRules().getBoolean(SYNC_HEALTH);
             boolean currentHungerValue = world.getGameRules().getBoolean(SYNC_HUNGER);
             boolean limitHealthValue = world.getGameRules().getBoolean(LIMIT_HEALTH);
