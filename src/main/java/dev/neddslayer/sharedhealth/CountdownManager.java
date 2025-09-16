@@ -13,8 +13,11 @@ public class CountdownManager {
     private boolean isActive;
     private boolean isPreCountdown;
     private int preCountdownTicks;
+    private boolean needsBlindnessApplication;
+    private int blindnessDelayTicks;
     private static final int PRE_COUNTDOWN_DELAY = 100; // 5 seconds * 20 ticks
     private static final int BLINDNESS_DURATION = 140; // 7 seconds * 20 ticks
+    private static final int BLINDNESS_DELAY = 10; // 0.5 seconds * 20 ticks
 
     public CountdownManager(MinecraftServer server) {
         this.server = server;
@@ -22,6 +25,8 @@ public class CountdownManager {
         this.isActive = false;
         this.isPreCountdown = false;
         this.preCountdownTicks = 0;
+        this.needsBlindnessApplication = false;
+        this.blindnessDelayTicks = 0;
     }
 
     public void start() {
@@ -36,21 +41,9 @@ public class CountdownManager {
             player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
         }
 
-        // Give all players blindness after they respawn (longer delay to ensure respawn completes)
-        server.execute(() -> {
-            try {
-                Thread.sleep(500); // Longer delay to ensure respawn is complete
-                SharedHealth.isResettingPlayers = false; // Clear flag after respawn
-
-                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                        net.minecraft.entity.effect.StatusEffects.BLINDNESS, BLINDNESS_DURATION, 0, false, false, true));
-                }
-            } catch (Exception e) {
-                System.err.println("[SharedHealth] Error applying blindness: " + e.getMessage());
-                SharedHealth.isResettingPlayers = false; // Make sure flag gets cleared
-            }
-        });
+        // Schedule blindness application using tick-based delay
+        this.needsBlindnessApplication = true;
+        this.blindnessDelayTicks = BLINDNESS_DELAY;
     }
 
     private void startActualTimer() {
@@ -82,6 +75,22 @@ public class CountdownManager {
     }
 
     public void tick() {
+        // Handle blindness application first
+        if (needsBlindnessApplication) {
+            blindnessDelayTicks--;
+            if (blindnessDelayTicks <= 0) {
+                needsBlindnessApplication = false;
+                SharedHealth.isResettingPlayers = false; // Clear reset flag
+
+                // Apply blindness to all players
+                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                    player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                        net.minecraft.entity.effect.StatusEffects.BLINDNESS, BLINDNESS_DURATION, 0, false, false, true));
+                }
+            }
+            return;
+        }
+
         // Handle pre-countdown first
         if (isPreCountdown) {
             preCountdownTicks--;
