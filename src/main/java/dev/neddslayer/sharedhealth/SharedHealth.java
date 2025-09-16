@@ -70,7 +70,7 @@ public class SharedHealth implements ModInitializer {
 
             // Register the /countdownstart command
             dispatcher.register(CommandManager.literal("countdownstart")
-                .requires(source -> source.hasPermissionLevel(2)) // Requires operator permission
+                .requires(source -> true) // Anyone can use this
                 .executes(context -> {
                     ServerCommandSource source = context.getSource();
 
@@ -93,7 +93,7 @@ public class SharedHealth implements ModInitializer {
 
             // Register the /countdownstop command
             dispatcher.register(CommandManager.literal("countdownstop")
-                .requires(source -> source.hasPermissionLevel(2)) // Requires operator permission
+                .requires(source -> true) // Anyone can use this
                 .executes(context -> {
                     ServerCommandSource source = context.getSource();
 
