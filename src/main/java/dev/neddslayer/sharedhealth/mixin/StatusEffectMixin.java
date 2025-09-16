@@ -20,6 +20,7 @@ import java.util.Set;
 public abstract class StatusEffectMixin {
 
     private static final Set<RegistryEntry<StatusEffect>> SYNCED_EFFECTS = new HashSet<>();
+    private static final ThreadLocal<Boolean> IS_SYNCING = ThreadLocal.withInitial(() -> false);
 
     static {
         // Positive effects
@@ -51,10 +52,19 @@ public abstract class StatusEffectMixin {
         SYNCED_EFFECTS.add(StatusEffects.DARKNESS);
     }
 
+    @Inject(method = "addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;Lnet/minecraft/entity/Entity;)Z", at = @At("RETURN"))
+    private void onStatusEffectAddedWithSource(StatusEffectInstance effect, net.minecraft.entity.Entity source, CallbackInfoReturnable<Boolean> cir) {
+        syncStatusEffectToPlayers(effect, source, cir.getReturnValue());
+    }
+
     @Inject(method = "addStatusEffect(Lnet/minecraft/entity/effect/StatusEffectInstance;)Z", at = @At("RETURN"))
     private void onStatusEffectAdded(StatusEffectInstance effect, CallbackInfoReturnable<Boolean> cir) {
-        if (!cir.getReturnValue()) {
-            return; // Effect wasn't actually added
+        syncStatusEffectToPlayers(effect, null, cir.getReturnValue());
+    }
+
+    private void syncStatusEffectToPlayers(StatusEffectInstance effect, net.minecraft.entity.Entity source, boolean wasAdded) {
+        if (!wasAdded || IS_SYNCING.get()) {
+            return; // Effect wasn't actually added or we're already syncing (prevent recursion)
         }
 
         LivingEntity entity = (LivingEntity) (Object) this;
@@ -76,22 +86,38 @@ public abstract class StatusEffectMixin {
             return;
         }
 
-        // Apply the effect to all other players
-        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
-            for (ServerPlayerEntity otherPlayer : serverWorld.getPlayers()) {
-                if (otherPlayer != player && !otherPlayer.hasStatusEffect(effect.getEffectType())) {
-                    // Create a copy of the effect for the other player
-                    StatusEffectInstance copiedEffect = new StatusEffectInstance(
-                        effect.getEffectType(),
-                        effect.getDuration(),
-                        effect.getAmplifier(),
-                        effect.isAmbient(),
-                        effect.shouldShowParticles(),
-                        effect.shouldShowIcon()
-                    );
-                    otherPlayer.addStatusEffect(copiedEffect);
+        // Set syncing flag to prevent recursion
+        IS_SYNCING.set(true);
+        try {
+            // Apply the effect to all other players
+            for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+                for (ServerPlayerEntity otherPlayer : serverWorld.getPlayers()) {
+                    if (otherPlayer != player) {
+                        // Check if we need to upgrade an existing effect or add a new one
+                        StatusEffectInstance existingEffect = otherPlayer.getStatusEffect(effect.getEffectType());
+                        if (existingEffect == null || existingEffect.getAmplifier() < effect.getAmplifier() ||
+                            (existingEffect.getAmplifier() == effect.getAmplifier() && existingEffect.getDuration() < effect.getDuration())) {
+                            // Create a copy of the effect for the other player
+                            StatusEffectInstance copiedEffect = new StatusEffectInstance(
+                                effect.getEffectType(),
+                                effect.getDuration(),
+                                effect.getAmplifier(),
+                                effect.isAmbient(),
+                                effect.shouldShowParticles(),
+                                effect.shouldShowIcon()
+                            );
+                            // Apply using the public method with source
+                            if (source != null) {
+                                otherPlayer.addStatusEffect(copiedEffect, source);
+                            } else {
+                                otherPlayer.addStatusEffect(copiedEffect);
+                            }
+                        }
+                    }
                 }
             }
+        } finally {
+            IS_SYNCING.set(false);
         }
     }
 
