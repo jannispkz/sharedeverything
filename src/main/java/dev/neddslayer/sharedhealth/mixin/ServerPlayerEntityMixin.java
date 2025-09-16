@@ -72,6 +72,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     public void killEveryoneOnDeath(DamageSource damageSource, CallbackInfo ci) {
         ServerWorld world = this.getServerWorld();
 
+        // Check if countdown is running - if not, just do normal death
+        if (SharedHealth.countdownManager == null || !SharedHealth.countdownManager.isActive()) {
+            return; // Normal death, no special effects
+        }
+
         // Check if this death event is part of the same death wave (within 100ms)
         long currentTime = System.currentTimeMillis();
         boolean isNewDeathWave = (currentTime - lastDeathTime) > 100;

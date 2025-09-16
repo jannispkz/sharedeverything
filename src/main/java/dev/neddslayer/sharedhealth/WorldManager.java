@@ -33,16 +33,10 @@ public class WorldManager {
         if (firstPlayer != null) {
             server.execute(() -> {
                 try {
-                    // Create world
+                    // Create world (skip difficulty setting as it's causing issues)
                     server.getCommandManager().executeWithPrefix(
                         firstPlayer.getCommandSource().withLevel(4),
                         "mw create " + currentChallengeWorld + " NORMAL"
-                    );
-
-                    // Set difficulty to hard
-                    server.getCommandManager().executeWithPrefix(
-                        firstPlayer.getCommandSource().withLevel(4),
-                        "mw difficulty HARD"
                     );
 
                     System.out.println("[SharedHealth] Created challenge world: " + currentChallengeWorld);
@@ -68,6 +62,8 @@ public class WorldManager {
             Text countdownMessage = Text.literal("Teleporting in: " + secondsLeft).formatted(Formatting.GOLD, Formatting.BOLD);
             server.getPlayerManager().getPlayerList().forEach(player -> {
                 player.sendMessage(countdownMessage, true);
+                // Play tick sound
+                player.playSoundToPlayer(net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK.value(), net.minecraft.sound.SoundCategory.MASTER, 1.0f, 1.0f);
             });
         }
 
@@ -83,24 +79,31 @@ public class WorldManager {
             return;
         }
 
-        // First teleport players to the world, then fix their position to surface
+        // Teleport each player directly to the world (let multiworld handle spawn)
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            final String playerName = player.getName().getString();
             server.execute(() -> {
                 try {
-                    // Teleport to world first
+                    // Teleport to world using multiworld command
                     server.getCommandManager().executeWithPrefix(
                         player.getCommandSource(),
                         "mw tp " + currentChallengeWorld
                     );
 
-                    // Then teleport to surface at 0,0 to avoid caves
-                    Thread.sleep(100); // Small delay to ensure world load
-                    server.getCommandManager().executeWithPrefix(
-                        player.getCommandSource(),
-                        "tp 0 ~ 0"
-                    );
+                    // Wait a bit then teleport to surface at 0,0
+                    server.execute(() -> {
+                        try {
+                            Thread.sleep(500); // Longer delay for world to fully load
+                            server.getCommandManager().executeWithPrefix(
+                                player.getCommandSource(),
+                                "tp 0 100 0"
+                            );
+                        } catch (Exception e) {
+                            System.err.println("[SharedHealth] Error setting surface position for " + playerName + ": " + e.getMessage());
+                        }
+                    });
                 } catch (Exception e) {
-                    System.err.println("[SharedHealth] Error teleporting player " + player.getName().getString() + ": " + e.getMessage());
+                    System.err.println("[SharedHealth] Error teleporting player " + playerName + ": " + e.getMessage());
                 }
             });
         }
