@@ -76,23 +76,23 @@ public class SharedHealth implements ModInitializer {
                     ServerCommandSource source = context.getSource();
 
                     if (countdownManager != null) {
-                        // Start the timer immediately
-                        countdownManager.start();
-
-                        // Set time to day and clear weather in all worlds
+                        // Set time to day, clear weather, and enable immediate respawn FIRST
                         for (ServerWorld world : source.getServer().getWorlds()) {
                             world.setTimeOfDay(1000); // Set to day (1000 ticks = morning)
                             world.resetWeather(); // Clear weather
                             world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
                         }
 
-                        // Update shared components to full values (killing/respawning handles the reset)
+                        // Update shared components to full values
                         ServerPlayerEntity firstPlayer = source.getServer().getPlayerManager().getPlayerList().isEmpty() ? null : source.getServer().getPlayerManager().getPlayerList().get(0);
                         if (firstPlayer != null) {
                             SHARED_HEALTH.get(firstPlayer.getScoreboard()).setHealth(20.0f);
                             SHARED_HUNGER.get(firstPlayer.getScoreboard()).setHunger(20);
                             SHARED_SATURATION.get(firstPlayer.getScoreboard()).setSaturation(20.0f);
                         }
+
+                        // Now start the timer (which will kill players with immediate respawn enabled)
+                        countdownManager.start();
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
                     }
