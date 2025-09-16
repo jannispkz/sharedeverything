@@ -28,7 +28,8 @@ public class DamageFeedEntry {
     }
 
     // Static width padding string (invisible spaces to maintain consistent width)
-    private static final String WIDTH_PADDING = "                              "; // 30 spaces
+    // Minecraft names max 16 chars, so "PlayerName16Char took 999 damage from PlayerName16Char" = ~55 chars
+    private static final String WIDTH_PADDING = "                                                            "; // 60 spaces
 
     public String getPlayerName() {
         return playerName;
