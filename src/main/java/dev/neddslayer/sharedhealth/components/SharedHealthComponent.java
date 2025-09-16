@@ -29,7 +29,11 @@ public class SharedHealthComponent implements IHealthComponent {
 
     @Override
     public void readFromNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-        this.health = tag.getFloat("playerHealth").orElse(0.0f);  // Default to 0.0f if not present
+        if (tag.contains("playerHealth")) {
+            this.health = tag.getFloat("playerHealth");
+        } else {
+            this.health = 0.0f;
+        }
     }
 
     @Override

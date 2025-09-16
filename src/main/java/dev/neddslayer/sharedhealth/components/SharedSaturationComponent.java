@@ -26,8 +26,11 @@ public class SharedSaturationComponent implements ISaturationComponent {
 
 	@Override
 	public void readFromNbt(NbtCompound tag, RegistryWrapper.WrapperLookup registryLookup) {
-		this.saturation = tag.getFloat("Saturation").orElse(0.0f);  // Default to 0.0f if not present
-
+		if (tag.contains("Saturation")) {
+			this.saturation = tag.getFloat("Saturation");
+		} else {
+			this.saturation = 0.0f;
+		}
 	}
 
 	@Override
