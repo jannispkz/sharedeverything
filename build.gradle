@@ -7,7 +7,7 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-    archivesName = project.archives_base_name
+    archivesName = "jSharedHealth"
 }
 
 repositories {
@@ -73,6 +73,21 @@ java {
 jar {
     from("LICENSE") {
         rename { "${it}_${project.archivesBaseName}"}
+    }
+
+    // Disable version in filename
+    archiveVersion = ""
+}
+
+// Copy the remapped jar to root directory
+tasks.remapJar {
+    archiveVersion = ""
+    doLast {
+        copy {
+            from archiveFile
+            into projectDir
+            rename { "jSharedHealth.jar" }
+        }
     }
 }
 
