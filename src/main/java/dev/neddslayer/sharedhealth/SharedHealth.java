@@ -90,9 +90,11 @@ public class SharedHealth implements ModInitializer {
                             // Clear player inventory
                             player.getInventory().clear();
 
-                            // Give saturation and regeneration for 5 seconds
-                            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                                net.minecraft.entity.effect.StatusEffects.SATURATION, 100, 100, false, false, true));
+                            // Directly set hunger and saturation to max
+                            player.getHungerManager().setFoodLevel(20);
+                            player.getHungerManager().setSaturationLevel(20.0f);
+
+                            // Give regeneration for 5 seconds
                             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                                 net.minecraft.entity.effect.StatusEffects.REGENERATION, 100, 100, false, false, true));
                         }
