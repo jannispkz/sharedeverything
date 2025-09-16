@@ -27,7 +27,6 @@ public abstract class StatusEffectMixin {
         SYNCED_EFFECTS.add(StatusEffects.SPEED);
         SYNCED_EFFECTS.add(StatusEffects.JUMP_BOOST);
         SYNCED_EFFECTS.add(StatusEffects.STRENGTH);
-        SYNCED_EFFECTS.add(StatusEffects.REGENERATION);
         SYNCED_EFFECTS.add(StatusEffects.RESISTANCE);
         SYNCED_EFFECTS.add(StatusEffects.FIRE_RESISTANCE);
         SYNCED_EFFECTS.add(StatusEffects.WATER_BREATHING);
@@ -35,7 +34,6 @@ public abstract class StatusEffectMixin {
         SYNCED_EFFECTS.add(StatusEffects.NIGHT_VISION);
         SYNCED_EFFECTS.add(StatusEffects.HASTE);
         SYNCED_EFFECTS.add(StatusEffects.ABSORPTION);
-        SYNCED_EFFECTS.add(StatusEffects.SATURATION);
         SYNCED_EFFECTS.add(StatusEffects.LUCK);
         SYNCED_EFFECTS.add(StatusEffects.SLOW_FALLING);
         SYNCED_EFFECTS.add(StatusEffects.CONDUIT_POWER);

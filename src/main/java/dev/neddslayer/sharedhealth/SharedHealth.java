@@ -84,6 +84,18 @@ public class SharedHealth implements ModInitializer {
                             world.resetWeather(); // Clear weather
                             world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
                         }
+
+                        // Give healing effects to the player who executed the command
+                        if (source.getEntity() instanceof ServerPlayerEntity player) {
+                            // Clear player inventory
+                            player.getInventory().clear();
+
+                            // Give saturation and regeneration for 5 seconds
+                            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                                net.minecraft.entity.effect.StatusEffects.SATURATION, 100, 100, false, false, true));
+                            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                                net.minecraft.entity.effect.StatusEffects.REGENERATION, 100, 100, false, false, true));
+                        }
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
                     }
