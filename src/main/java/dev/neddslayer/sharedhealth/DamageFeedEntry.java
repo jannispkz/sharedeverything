@@ -27,6 +27,9 @@ public class DamageFeedEntry {
         this.isPlaceholder = true;
     }
 
+    // Static width padding string (invisible spaces to maintain consistent width)
+    private static final String WIDTH_PADDING = "                              "; // 30 spaces
+
     public String getPlayerName() {
         return playerName;
     }
@@ -65,7 +68,8 @@ public class DamageFeedEntry {
 
     public Text getFormattedText() {
         if (isPlaceholder) {
-            return Text.literal("");
+            // Return invisible padding to maintain scoreboard width
+            return Text.literal(WIDTH_PADDING).formatted(Formatting.BLACK);
         }
 
         String formattedDamage;
@@ -79,6 +83,11 @@ public class DamageFeedEntry {
             formattedDamage,
             damageSource,
             playerName);
+
+        // Pad the text to a consistent width
+        if (entryText.length() < WIDTH_PADDING.length()) {
+            entryText = entryText + WIDTH_PADDING.substring(entryText.length());
+        }
 
         // Color based on age: red (< 1s), dark gray (8-10s), gray (1-8s)
         if (isNew()) {
