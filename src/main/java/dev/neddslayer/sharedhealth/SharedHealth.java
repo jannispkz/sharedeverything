@@ -41,6 +41,7 @@ public class SharedHealth implements ModInitializer {
     private static int tabListUpdateCounter = 0;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
+    public static ShutdownManager shutdownManager;
 
     /**
      * Runs the mod initializer.
@@ -78,25 +79,7 @@ public class SharedHealth implements ModInitializer {
                             world.setTimeOfDay(1000); // Set to day (1000 ticks = morning)
                             world.resetWeather(); // Clear weather
                             world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, source.getServer());
-
-                            // Reset all players
-                            for (ServerPlayerEntity player : world.getPlayers()) {
-                                // Clear inventory
-                                player.getInventory().clear();
-
-                                // Set full health and hunger
-                                player.setHealth(20.0f);
-                                player.getHungerManager().setFoodLevel(20);
-                                player.getHungerManager().setSaturationLevel(5.0f);
-
-                                // Clear all status effects
-                                player.clearStatusEffects();
-                            }
                         }
-
-                        source.sendFeedback(() -> Text.literal("Countdown timer started from 0.").formatted(Formatting.GREEN), true);
-                        source.sendFeedback(() -> Text.literal("Time set to day, weather cleared, and immediate respawn enabled.").formatted(Formatting.YELLOW), true);
-                        source.sendFeedback(() -> Text.literal("All inventories cleared, health/hunger restored, and effects removed.").formatted(Formatting.YELLOW), true);
                     } else {
                         source.sendError(Text.literal("Countdown manager is not initialized."));
                     }
@@ -121,13 +104,14 @@ public class SharedHealth implements ModInitializer {
                 }));
         });
 
-        // Initialize damage feed manager and countdown manager when server starts
+        // Initialize managers when server starts
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             damageFeedManager = new DamageFeedManager(server);
             countdownManager = new CountdownManager(server);
+            shutdownManager = new ShutdownManager(server);
         });
 
-        // Clear damage feed manager and countdown manager when server stops
+        // Clear managers when server stops
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             if (damageFeedManager != null) {
                 damageFeedManager.clearFeed();
@@ -136,6 +120,9 @@ public class SharedHealth implements ModInitializer {
             if (countdownManager != null) {
                 countdownManager.stop();
                 countdownManager = null;
+            }
+            if (shutdownManager != null) {
+                shutdownManager = null;
             }
         });
 
@@ -147,6 +134,10 @@ public class SharedHealth implements ModInitializer {
             // Update countdown manager
             if (countdownManager != null) {
                 countdownManager.tick();
+            }
+            // Update shutdown manager
+            if (shutdownManager != null) {
+                shutdownManager.tick();
             }
 
             // Update tab list every 3 seconds (60 ticks)

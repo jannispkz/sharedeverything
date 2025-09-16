@@ -91,6 +91,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             SharedHealth.countdownManager.stop();
         }
 
+        // Start shutdown countdown
+        if (SharedHealth.shutdownManager != null) {
+            SharedHealth.shutdownManager.startShutdown();
+        }
+
         // Reset shared components
         SHARED_HEALTH.get(this.getScoreboard()).setHealth(20.0f);
         SHARED_HUNGER.get(this.getScoreboard()).setHunger(20);
