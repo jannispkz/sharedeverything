@@ -16,6 +16,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
@@ -47,6 +49,8 @@ public class SharedHealth implements ModInitializer {
     public static ShutdownManager shutdownManager;
     public static DragonDefeatManager dragonDefeatManager;
     public static boolean isResettingPlayers = false;
+    public static boolean isDeathWave = false;
+    public static long deathWaveTime = 0;
 
     /**
      * Runs the mod initializer.
@@ -351,6 +355,39 @@ public class SharedHealth implements ModInitializer {
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> handler.player.setHealth(SHARED_HEALTH.get(handler.player.getWorld().getScoreboard()).getHealth()));
 
-        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> newPlayer.setHealth(SHARED_HEALTH.get(newPlayer.getWorld().getScoreboard()).getHealth()));
+        ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+            newPlayer.setHealth(SHARED_HEALTH.get(newPlayer.getWorld().getScoreboard()).getHealth());
+
+            // Check if this respawn is part of a death wave (within 2 seconds of death)
+            if (isDeathWave && (System.currentTimeMillis() - deathWaveTime) < 2000) {
+                // Play death sound and show title after a small delay to ensure client is ready
+                newPlayer.getServer().execute(() -> {
+                    try {
+                        Thread.sleep(100); // Small delay for client to stabilize
+                    } catch (InterruptedException e) {
+                        // Ignore
+                    }
+
+                    // Send death title
+                    Text deathTitle = Text.literal("EVERYONE DIED").formatted(Formatting.RED);
+                    newPlayer.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(deathTitle));
+                    newPlayer.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(Text.empty()));
+                    newPlayer.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
+
+                    // Play wither spawn sound with higher volume to override other sounds
+                    newPlayer.playSoundToPlayer(
+                        SoundEvents.ENTITY_WITHER_SPAWN,
+                        SoundCategory.MASTER,
+                        3.0f,  // Higher volume to override other sounds
+                        1.0f
+                    );
+                });
+
+                // Clear the death wave flag after 2 seconds
+                if ((System.currentTimeMillis() - deathWaveTime) > 1500) {
+                    isDeathWave = false;
+                }
+            }
+        });
     }
 }

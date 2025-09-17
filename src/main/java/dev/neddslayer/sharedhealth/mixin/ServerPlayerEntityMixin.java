@@ -97,6 +97,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             deathSummaryShown = false;
         }
 
+        // Mark that we're in a death wave for respawn handling
+        SharedHealth.isDeathWave = true;
+        SharedHealth.deathWaveTime = System.currentTimeMillis();
+
         // Kill all players across all dimensions (use list copy to avoid concurrent modification)
         java.util.List<ServerPlayerEntity> allPlayers = new java.util.ArrayList<>();
         for (ServerWorld serverWorld : world.getServer().getWorlds()) {
@@ -104,38 +108,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
         }
         allPlayers.forEach(p -> p.kill(p.getServerWorld()));
 
-        // Show death title to all players
-        net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED").formatted(net.minecraft.util.Formatting.RED);
-
-        // Schedule sounds and title to play after respawn (with delay)
-        world.getServer().execute(() -> {
-            try {
-                Thread.sleep(500); // 500ms delay to ensure players have fully respawned and loaded
-            } catch (InterruptedException e) {
-                // Ignore
-            }
-
-            for (ServerWorld serverWorld : world.getServer().getWorlds()) {
-                for (ServerPlayerEntity player : serverWorld.getPlayers()) {
-                    // Send title
-                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(deathTitle));
-                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(net.minecraft.text.Text.empty()));
-                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(10, 100, 20));
-
-                    // Play wither spawn sound directly to player (not at position)
-                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket(
-                        net.minecraft.registry.entry.RegistryEntry.of(net.minecraft.sound.SoundEvents.ENTITY_WITHER_SPAWN),
-                        net.minecraft.sound.SoundCategory.MASTER,
-                        player.getX(),
-                        player.getY(),
-                        player.getZ(),
-                        2.0f,
-                        1.0f,
-                        player.getRandom().nextLong()
-                    ));
-                }
-            }
-        });
+        // Death title will be shown on respawn to ensure it's visible
 
         // Stop the countdown if it's running
         if (SharedHealth.countdownManager != null) {
