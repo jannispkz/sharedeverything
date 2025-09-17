@@ -36,6 +36,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     private void cancelSharedFireDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (SharedHealth.sharedFireManager != null && SharedHealth.sharedFireManager.shouldCancelFireDamage((ServerPlayerEntity) (Object) this, source)) {
             cir.setReturnValue(false);
+            cir.cancel();
         }
     }
 

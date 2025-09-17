@@ -23,6 +23,7 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 - **Shared Experience** (`/gamerule shareExperience`)
 - **Shared Ender Pearls** (`/gamerule shareEnderPearls`)
 - **Shared Air/Oxygen** (`/gamerule shareAir`) - Advanced underwater breathing mechanics
+- **Shared Fire** (`/gamerule shareFire`) - Fire damage and burning state synchronized
 - **Countdown Timer System** (`/countdownstart`, `/countdownstop`)
 - **Real-time Damage Feed** (sidebar scoreboard)
 - **Death System with Statistics** (team wipe mechanics)
@@ -58,6 +59,13 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
     - Players not underwater still see shared air level
   - Air regenerates when all players are above water
   - Creates strategic coordination for underwater exploration
+
+- **Shared Fire** (`/gamerule shareFire`)
+  - When one player catches fire, all players burn together
+  - Shared fire duration - longest fire time applies to all
+  - Smart extinguishing - water/rain extinguishes fire for everyone
+  - Fire damage prevention for "managed" burning (shared fire state)
+  - Only natural fire sources spread to team
 
 
 ### 🎮 Core Speedrun System
