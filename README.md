@@ -53,47 +53,24 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
   - Works across dimensions
 
 - **Shared Air/Oxygen** (`/gamerule shareAir`)
-  - All players share the same air supply (oxygen bubbles)
-  - Mechanics:
-    - Air drains per submerged player who cannot breathe
-    - Drowning damage hits everyone equally when air hits zero
-    - Players in bubble columns (magma/soul sand) don’t drain the shared supply
-  - Air regenerates only when nobody is drowning
+  - Shared bubble meter; drowning spreads to the team
 
 - **Shared Fire** (`/gamerule shareFire`)
-  - When one player is on fire, the burn spreads to everyone
-  - Natural burn sources define the shared burn duration
-  - Water/rain extinguishes everyone together
-  - Shared fire damage is canceled for teammates who only received fire from sync
+  - Burn state mirrors across the group, but only natural ignitions deal damage
+  - Water or rain extinguishes all players simultaneously
 
 - **Shared Freeze** (`/gamerule shareFreeze`)
-  - Powder snow freezing spreads to every teammate
-  - Only natural powder-snow victims take freeze damage; synced players keep the visual freeze without damage
+  - Powder-snow freezing syncs visually while only natural targets take damage
 
 ### 🎮 Core Speedrun System
 
 - **Countdown Timer** (`/countdownstart`, `/countdownstop`)
-  - Displays timer in action bar
-  - Pre-countdown lobby (5 seconds): blindness, slowness, mining fatigue, glowing
-  - Lobby lockdown:
-    - Inventories cleared and players silently respawned at spawn
-    - World border clamped to 16-block radius and gradually expands after start
-    - `doImmediateRespawn` turned on
-    - No hunger drain, block breaking, or damage during lobby
-  - Start signal: “Timer lööft” title + goat horn
-  - Persistent glowing re-applied every 3 seconds during runs
+  - Timer in the action bar with a 5s lobby that wipes inventories, tightens the border, freezes hunger/damage, and respawns everyone instantly
+  - Launch cue (“Timer lööft”) plus goat horn; glowing reapplies every few seconds during the run
 
-- **Damage Feed Sidebar**
-  - Tracks last eight damage events with color-coded aging
-  - Updates every 500ms; clears automatically
-  - Reset using `/resetscoreboard`
+- **Damage Feed Sidebar** – Rolling log of the last eight damage events (auto expires, reset with `/resetscoreboard`)
 
-- **Death System Overhaul**
-  - Team wipes only trigger if countdown is active
-  - “EVERYONE DIED” title and wither spawn sound
-  - Displays death summary (deaths, kills, damage, distance)
-  - Records the run in the historical log with failure cause
-  - Auto world deletion 30 seconds after wipe
+- **Death System Overhaul** – Shared-health wipes trigger only during active runs, broadcast a summary, log the attempt, and delete the world 30 seconds later
 
 ### 🐉 Ender Dragon Victory Celebration
 
