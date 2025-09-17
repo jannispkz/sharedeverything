@@ -33,12 +33,14 @@ public abstract class StatusEffectMixin {
         SYNCED_EFFECTS.add(StatusEffects.INVISIBILITY);
         SYNCED_EFFECTS.add(StatusEffects.NIGHT_VISION);
         SYNCED_EFFECTS.add(StatusEffects.HASTE);
-        SYNCED_EFFECTS.add(StatusEffects.ABSORPTION);
         SYNCED_EFFECTS.add(StatusEffects.LUCK);
+        SYNCED_EFFECTS.add(StatusEffects.BAD_LUCK);
         SYNCED_EFFECTS.add(StatusEffects.SLOW_FALLING);
         SYNCED_EFFECTS.add(StatusEffects.CONDUIT_POWER);
         SYNCED_EFFECTS.add(StatusEffects.DOLPHINS_GRACE);
         SYNCED_EFFECTS.add(StatusEffects.HERO_OF_THE_VILLAGE);
+        SYNCED_EFFECTS.add(StatusEffects.LEVITATION);
+        SYNCED_EFFECTS.add(StatusEffects.RAID_OMEN);
 
         // Negative (non-damaging) effects
         SYNCED_EFFECTS.add(StatusEffects.SLOWNESS);
