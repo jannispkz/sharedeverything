@@ -25,11 +25,15 @@ public class SharedComponentsInitializer implements ScoreboardComponentInitializ
     public static final ComponentKey<SharedExhaustionComponent> SHARED_EXHAUSTION =
             ComponentRegistry.getOrCreate(id("exhaustion"), SharedExhaustionComponent.class);
 
+    public static final ComponentKey<SharedAirComponent> SHARED_AIR =
+            ComponentRegistry.getOrCreate(id("air"), SharedAirComponent.class);
+
     @Override
     public void registerScoreboardComponentFactories(ScoreboardComponentFactoryRegistry registry) {
         registry.registerScoreboardComponent(SHARED_HEALTH, SharedHealthComponent::new);
         registry.registerScoreboardComponent(SHARED_HUNGER, SharedHungerComponent::new);
 		registry.registerScoreboardComponent(SHARED_SATURATION, SharedSaturationComponent::new);
 		registry.registerScoreboardComponent(SHARED_EXHAUSTION, SharedExhaustionComponent::new);
+        registry.registerScoreboardComponent(SHARED_AIR, SharedAirComponent::new);
     }
 }

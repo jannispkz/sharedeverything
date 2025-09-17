@@ -1,5 +1,6 @@
 package dev.neddslayer.sharedhealth;
 
+import dev.neddslayer.sharedhealth.components.SharedAirComponent;
 import dev.neddslayer.sharedhealth.components.SharedExhaustionComponent;
 import dev.neddslayer.sharedhealth.components.SharedHealthComponent;
 import dev.neddslayer.sharedhealth.components.SharedHungerComponent;
@@ -36,6 +37,8 @@ public class SharedHealth implements ModInitializer {
             GameRuleRegistry.register("shareStatusEffects", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> SYNC_EXPERIENCE =
             GameRuleRegistry.register("shareExperience", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
+    public static final GameRules.Key<GameRules.BooleanRule> SYNC_AIR =
+            GameRuleRegistry.register("shareAir", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> LIMIT_HEALTH =
             GameRuleRegistry.register("limitHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     private static boolean lastHealthValue = true;
@@ -43,11 +46,13 @@ public class SharedHealth implements ModInitializer {
     private static boolean lastEnderPearlValue = true;
     private static boolean lastStatusEffectsValue = true;
     private static boolean lastExperienceValue = true;
+    private static boolean lastAirValue = true;
     private static int tabListUpdateCounter = 0;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
     public static ShutdownManager shutdownManager;
     public static DragonDefeatManager dragonDefeatManager;
+    public static SharedAirManager sharedAirManager;
     public static boolean isResettingPlayers = false;
     public static boolean isDeathWave = false;
     public static long deathWaveTime = 0;
@@ -194,6 +199,7 @@ public class SharedHealth implements ModInitializer {
             countdownManager = new CountdownManager(server);
             shutdownManager = new ShutdownManager(server);
             dragonDefeatManager = new DragonDefeatManager(server);
+            sharedAirManager = new SharedAirManager(server);
         });
 
         // Clear managers when server stops
@@ -212,6 +218,9 @@ public class SharedHealth implements ModInitializer {
             if (dragonDefeatManager != null) {
                 dragonDefeatManager.reset();
                 dragonDefeatManager = null;
+            }
+            if (sharedAirManager != null) {
+                sharedAirManager = null;
             }
         });
 
@@ -233,6 +242,20 @@ public class SharedHealth implements ModInitializer {
                 // Update dragon defeat manager
                 if (dragonDefeatManager != null) {
                     dragonDefeatManager.tick();
+                }
+                if (sharedAirManager != null) {
+                    if (world.getGameRules().getBoolean(SYNC_AIR)) {
+                        sharedAirManager.tick();
+                    } else {
+                        SharedAirComponent airComponent = SHARED_AIR.get(world.getScoreboard());
+                        airComponent.setAir(airComponent.getMaxAir());
+                        airComponent.setDrowningTicks(0);
+                        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+                            for (ServerPlayerEntity player : serverWorld.getPlayers()) {
+                                player.setAir(player.getMaxAir());
+                            }
+                        }
+                    }
                 }
             }
 
@@ -263,6 +286,7 @@ public class SharedHealth implements ModInitializer {
             boolean currentEnderPearlValue = world.getGameRules().getBoolean(SYNC_ENDER_PEARLS);
             boolean currentStatusEffectsValue = world.getGameRules().getBoolean(SYNC_STATUS_EFFECTS);
             boolean currentExperienceValue = world.getGameRules().getBoolean(SYNC_EXPERIENCE);
+            boolean currentAirValue = world.getGameRules().getBoolean(SYNC_AIR);
             boolean limitHealthValue = world.getGameRules().getBoolean(LIMIT_HEALTH);
             if (currentHealthValue != lastHealthValue && currentHealthValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareHealth.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
@@ -303,6 +327,20 @@ public class SharedHealth implements ModInitializer {
             else if (currentExperienceValue != lastExperienceValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareExperience.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
                 lastExperienceValue = false;
+            }
+            if (currentAirValue != lastAirValue && currentAirValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareAir.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
+                SharedAirComponent airComponent = SHARED_AIR.get(world.getScoreboard());
+                airComponent.setAir(airComponent.getMaxAir());
+                airComponent.setDrowningTicks(0);
+                lastAirValue = true;
+            }
+            else if (currentAirValue != lastAirValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareAir.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
+                SharedAirComponent airComponent = SHARED_AIR.get(world.getScoreboard());
+                airComponent.setAir(airComponent.getMaxAir());
+                airComponent.setDrowningTicks(0);
+                lastAirValue = false;
             }
             if (world.getGameRules().getBoolean(SYNC_HEALTH)) {
                 SharedHealthComponent component = SHARED_HEALTH.get(world.getScoreboard());
@@ -359,6 +397,7 @@ public class SharedHealth implements ModInitializer {
             handler.player.getHungerManager().setFoodLevel(SHARED_HUNGER.get(handler.player.getWorld().getScoreboard()).getHunger());
             handler.player.getHungerManager().setSaturationLevel(SHARED_SATURATION.get(handler.player.getWorld().getScoreboard()).getSaturation());
             handler.player.getHungerManager().exhaustion = SHARED_EXHAUSTION.get(handler.player.getWorld().getScoreboard()).getExhaustion();
+            handler.player.setAir(SHARED_AIR.get(handler.player.getServerWorld().getScoreboard()).getAir());
         });
 
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
@@ -373,6 +412,11 @@ public class SharedHealth implements ModInitializer {
             SHARED_HUNGER.get(newPlayer.getWorld().getScoreboard()).setHunger(20);
             SHARED_SATURATION.get(newPlayer.getWorld().getScoreboard()).setSaturation(20.0f);
             SHARED_EXHAUSTION.get(newPlayer.getWorld().getScoreboard()).setExhaustion(0.0f);
+            SharedAirComponent airComponent = SHARED_AIR.get(newPlayer.getWorld().getScoreboard());
+            airComponent.setAir(newPlayer.getMaxAir());
+            airComponent.setMaxAir(Math.max(airComponent.getMaxAir(), newPlayer.getMaxAir()));
+            airComponent.setDrowningTicks(0);
+            newPlayer.setAir(newPlayer.getMaxAir());
 
             // Check if this respawn is part of a death wave (within 2 seconds of death)
             if (isDeathWave && (System.currentTimeMillis() - deathWaveTime) < 2000) {

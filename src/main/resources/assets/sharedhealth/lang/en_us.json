@@ -6,7 +6,9 @@
   "gamerule.shareHunger": "Share hunger across all players",
   "gamerule.shareHunger.enabled": "Shared hunger has been enabled!",
   "gamerule.shareHunger.disabled": "Shared hunger has been disabled!",
+  "gamerule.shareAir": "Share air (bubbles) across all players",
+  "gamerule.shareAir.enabled": "Shared air has been enabled!",
+  "gamerule.shareAir.disabled": "Shared air has been disabled!",
   "gamerule.limitHealth": "Limit maximum health to 20",
   "gamerule.limitHealth.description": "Disable this for compatibility with some mods"
 }
-

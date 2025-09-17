@@ -33,7 +33,8 @@
       "sharedhealth:health",
       "sharedhealth:hunger",
       "sharedhealth:saturation",
-      "sharedhealth:exhaustion"
+      "sharedhealth:exhaustion",
+      "sharedhealth:air"
     ]
   }
 }
