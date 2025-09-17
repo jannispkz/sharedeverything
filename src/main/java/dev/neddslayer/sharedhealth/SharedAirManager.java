@@ -115,12 +115,37 @@ public class SharedAirManager {
             return;
         }
 
-        float damageAmount = BASE_DROWN_DAMAGE * events;
-        for (ServerPlayerEntity player : submergedPlayers) {
-            if (!player.isAlive() || player.getAbilities().invulnerable) {
-                continue;
+        if (submergedPlayers.isEmpty()) {
+            return;
+        }
+
+        boolean sharedHealthEnabled = submergedPlayers.get(0).getServerWorld().getGameRules().getBoolean(SharedHealth.SYNC_HEALTH);
+
+        if (sharedHealthEnabled) {
+            float totalDamage = BASE_DROWN_DAMAGE * events * submergedPlayers.size();
+            ServerPlayerEntity target = submergedPlayers.get(0);
+            if (target.isAlive() && !target.getAbilities().invulnerable) {
+                target.damage(target.getServerWorld(), target.getServerWorld().getDamageSources().drown(), totalDamage);
+
+                if (SharedHealth.damageFeedManager != null && submergedPlayers.size() > 1) {
+                    for (int i = 1; i < submergedPlayers.size(); i++) {
+                        ServerPlayerEntity extraPlayer = submergedPlayers.get(i);
+                        SharedHealth.damageFeedManager.addDamageEntry(
+                            extraPlayer.getName().getString(),
+                            BASE_DROWN_DAMAGE * events,
+                            "drowning"
+                        );
+                    }
+                }
             }
-            player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().drown(), damageAmount);
+        } else {
+            float damageAmount = BASE_DROWN_DAMAGE * events;
+            for (ServerPlayerEntity player : submergedPlayers) {
+                if (!player.isAlive() || player.getAbilities().invulnerable) {
+                    continue;
+                }
+                player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().drown(), damageAmount);
+            }
         }
     }
 }
