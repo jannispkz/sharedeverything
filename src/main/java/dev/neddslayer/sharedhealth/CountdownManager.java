@@ -18,7 +18,6 @@ public class CountdownManager {
     private static final int PRE_COUNTDOWN_DELAY = 100; // 5 seconds * 20 ticks
     private static final int BLINDNESS_DURATION = 120; // 6 seconds * 20 ticks
     private static final int DEBUFF_DURATION = 100; // 5 seconds * 20 ticks
-    private static final int GLOW_DURATION = 200; // 10 seconds * 20 ticks
     private static final int BLINDNESS_DELAY = 10; // 0.5 seconds * 20 ticks
 
     public CountdownManager(MinecraftServer server) {
@@ -66,10 +65,10 @@ public class CountdownManager {
             player.playSoundToPlayer(net.minecraft.sound.SoundEvent.of(net.minecraft.util.Identifier.of("item.goat_horn.sound.0")), SoundCategory.MASTER, 1.0f, 1.0f);
         }
 
-        // Give glow effect to all players for 10 seconds when timer starts
+        // Give initial glow effect to all players (15 seconds, no particles)
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                net.minecraft.entity.effect.StatusEffects.GLOWING, GLOW_DURATION, 0, false, false, true));
+                net.minecraft.entity.effect.StatusEffects.GLOWING, 300, 0, false, false, false));
         }
     }
 
@@ -133,6 +132,15 @@ public class CountdownManager {
 
         if (!isActive) {
             return;
+        }
+
+        // Reapply glowing effect every 60 ticks (3 seconds) to counter milk and keep players visible
+        if (server.getTicks() % 60 == 0) {
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                // Apply glowing for 15 seconds (300 ticks), no particles
+                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    net.minecraft.entity.effect.StatusEffects.GLOWING, 300, 0, false, false, false));
+            }
         }
 
         long elapsedMillis = System.currentTimeMillis() - startTime;
