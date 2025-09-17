@@ -397,7 +397,22 @@ public class SharedHealth implements ModInitializer {
             handler.player.getHungerManager().setFoodLevel(SHARED_HUNGER.get(handler.player.getWorld().getScoreboard()).getHunger());
             handler.player.getHungerManager().setSaturationLevel(SHARED_SATURATION.get(handler.player.getWorld().getScoreboard()).getSaturation());
             handler.player.getHungerManager().exhaustion = SHARED_EXHAUSTION.get(handler.player.getWorld().getScoreboard()).getExhaustion();
-            handler.player.setAir(SHARED_AIR.get(handler.player.getServerWorld().getScoreboard()).getAir());
+
+            SharedAirComponent airComponent = SHARED_AIR.get(handler.player.getServerWorld().getScoreboard());
+            if (handler.player.getServerWorld().getGameRules().getBoolean(SYNC_AIR)) {
+                int maxAir = handler.player.getMaxAir();
+                if (maxAir > airComponent.getMaxAir()) {
+                    airComponent.setMaxAir(maxAir);
+                    airComponent.setAir(Math.min(airComponent.getAir(), maxAir));
+                }
+                handler.player.setAir(Math.min(airComponent.getAir(), maxAir));
+            } else {
+                int maxAir = handler.player.getMaxAir();
+                handler.player.setAir(maxAir);
+                airComponent.setAir(maxAir);
+                airComponent.setMaxAir(maxAir);
+                airComponent.setDrowningTicks(0);
+            }
         });
 
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
@@ -413,10 +428,20 @@ public class SharedHealth implements ModInitializer {
             SHARED_SATURATION.get(newPlayer.getWorld().getScoreboard()).setSaturation(20.0f);
             SHARED_EXHAUSTION.get(newPlayer.getWorld().getScoreboard()).setExhaustion(0.0f);
             SharedAirComponent airComponent = SHARED_AIR.get(newPlayer.getWorld().getScoreboard());
-            airComponent.setAir(newPlayer.getMaxAir());
-            airComponent.setMaxAir(Math.max(airComponent.getMaxAir(), newPlayer.getMaxAir()));
-            airComponent.setDrowningTicks(0);
-            newPlayer.setAir(newPlayer.getMaxAir());
+            if (newPlayer.getServerWorld().getGameRules().getBoolean(SYNC_AIR)) {
+                int maxAir = newPlayer.getMaxAir();
+                if (maxAir > airComponent.getMaxAir()) {
+                    airComponent.setMaxAir(maxAir);
+                }
+                airComponent.setAir(Math.min(airComponent.getAir(), airComponent.getMaxAir()));
+                newPlayer.setAir(Math.min(airComponent.getAir(), maxAir));
+            } else {
+                int maxAir = newPlayer.getMaxAir();
+                airComponent.setAir(maxAir);
+                airComponent.setMaxAir(maxAir);
+                airComponent.setDrowningTicks(0);
+                newPlayer.setAir(maxAir);
+            }
 
             // Check if this respawn is part of a death wave (within 2 seconds of death)
             if (isDeathWave && (System.currentTimeMillis() - deathWaveTime) < 2000) {

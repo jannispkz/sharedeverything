@@ -37,10 +37,8 @@ public class SharedAirManager {
             return;
         }
 
+        List<ServerPlayerEntity> submergedPlayers = new ArrayList<>();
         int computedMaxAir = 0;
-        int totalConsumption = 0;
-        int consumingPlayers = 0;
-        boolean anySubmerged = false;
 
         for (ServerPlayerEntity player : players) {
             if (!player.isAlive()) {
@@ -51,17 +49,10 @@ public class SharedAirManager {
 
             boolean invulnerable = player.getAbilities().invulnerable;
             boolean canBreathe = player.canBreatheInWater();
-            boolean isSubmerged = player.isSubmergedInWater();
+            boolean isSubmerged = player.isSubmergedInWater() || player.isInsideWaterOrBubbleColumn();
 
-            if (isSubmerged && !canBreathe && !invulnerable) {
-                anySubmerged = true;
-            }
-
-            int playerAir = player.getAir();
-            int delta = sharedAir - playerAir;
-            if (delta > 0 && !invulnerable) {
-                totalConsumption += delta;
-                consumingPlayers++;
+            if (!invulnerable && isSubmerged && !canBreathe) {
+                submergedPlayers.add(player);
             }
         }
 
@@ -71,38 +62,26 @@ public class SharedAirManager {
         if (computedMaxAir != sharedMaxAir) {
             component.setMaxAir(computedMaxAir);
             sharedMaxAir = computedMaxAir;
+            sharedAir = Math.min(sharedAir, sharedMaxAir);
         }
 
         int newAir = sharedAir;
-        if (totalConsumption > 0) {
-            newAir = sharedAir - totalConsumption;
-            if (newAir < 0) {
-                int deficit = -newAir;
-                newAir = 0;
-                drowningTicks += deficit;
-            }
-        } else if (!anySubmerged) {
-            if (sharedAir < sharedMaxAir) {
-                newAir = Math.min(sharedMaxAir, sharedAir + REGEN_RATE);
-            }
-            if (newAir == sharedMaxAir) {
-                drowningTicks = 0;
-            }
+        if (!submergedPlayers.isEmpty()) {
+            newAir = Math.max(sharedAir - submergedPlayers.size(), 0);
+        } else if (sharedAir < sharedMaxAir) {
+            newAir = Math.min(sharedMaxAir, sharedAir + REGEN_RATE);
         }
 
-        if (newAir > 0 && totalConsumption == 0) {
-            drowningTicks = 0;
-        }
+        component.setAir(newAir);
 
-        component.setAir(Math.max(0, Math.min(newAir, sharedMaxAir)));
-
-        if (component.getAir() == 0 && consumingPlayers > 0) {
-            if (drowningTicks >= DAMAGE_INTERVAL) {
-                int events = drowningTicks / DAMAGE_INTERVAL;
-                applyDrowningDamage(players, consumingPlayers, events);
+        if (newAir == 0 && !submergedPlayers.isEmpty()) {
+            drowningTicks += 1;
+            int events = drowningTicks / DAMAGE_INTERVAL;
+            if (events > 0) {
+                applyDrowningDamage(submergedPlayers, events);
                 drowningTicks -= events * DAMAGE_INTERVAL;
             }
-        } else if (component.getAir() > 0) {
+        } else {
             drowningTicks = 0;
         }
 
@@ -110,10 +89,16 @@ public class SharedAirManager {
 
         int finalAir = component.getAir();
         for (ServerPlayerEntity player : players) {
-            if (player.isAlive()) {
-                int clampedAir = Math.min(finalAir, player.getMaxAir());
-                player.setAir(clampedAir);
+            if (!player.isAlive()) {
+                continue;
             }
+            if (player.getAbilities().invulnerable) {
+                player.setAir(player.getMaxAir());
+                continue;
+            }
+
+            int clampedAir = Math.min(finalAir, player.getMaxAir());
+            player.setAir(clampedAir);
         }
     }
 
@@ -125,13 +110,13 @@ public class SharedAirManager {
         return players;
     }
 
-    private void applyDrowningDamage(List<ServerPlayerEntity> players, int consumingPlayers, int events) {
-        if (consumingPlayers <= 0 || events <= 0) {
+    private void applyDrowningDamage(List<ServerPlayerEntity> submergedPlayers, int events) {
+        if (events <= 0) {
             return;
         }
 
-        float damageAmount = BASE_DROWN_DAMAGE * consumingPlayers * events;
-        for (ServerPlayerEntity player : players) {
+        float damageAmount = BASE_DROWN_DAMAGE * events;
+        for (ServerPlayerEntity player : submergedPlayers) {
             if (!player.isAlive() || player.getAbilities().invulnerable) {
                 continue;
             }
