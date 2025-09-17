@@ -85,6 +85,14 @@ public class DragonDefeatManager {
 
             // Set player to creative mode
             player.changeGameMode(net.minecraft.world.GameMode.CREATIVE);
+
+            // Give players regeneration, resistance and glowing to prevent any deaths during celebration
+            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                net.minecraft.entity.effect.StatusEffects.REGENERATION, 10000, 100, false, false, false)); // 500 seconds
+            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                net.minecraft.entity.effect.StatusEffects.RESISTANCE, 10000, 100, false, false, false)); // 500 seconds
+            player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                net.minecraft.entity.effect.StatusEffects.GLOWING, 10000, 0, false, false, true)); // 500 seconds
         }
 
         // Show statistics in chat

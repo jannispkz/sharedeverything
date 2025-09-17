@@ -77,6 +77,11 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             return; // This is a countdown reset death, ignore
         }
 
+        // Check if we're in victory celebration - if so, ignore deaths
+        if (SharedHealth.dragonDefeatManager != null && SharedHealth.dragonDefeatManager.isVictory()) {
+            return; // Victory celebration death, doesn't count as run failure
+        }
+
         // Check if countdown is running - if not, just do normal death
         if (SharedHealth.countdownManager == null || !SharedHealth.countdownManager.isActive()) {
             return; // Normal death, no special effects
