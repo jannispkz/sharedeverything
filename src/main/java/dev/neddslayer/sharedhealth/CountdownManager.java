@@ -35,9 +35,11 @@ public class CountdownManager {
         this.isPreCountdown = true;
         this.preCountdownTicks = PRE_COUNTDOWN_DELAY;
 
-        // Kill all players silently to reset them at spawn
+        // Clear inventories and kill all players silently to reset them at spawn
         SharedHealth.isResettingPlayers = true;
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            // Clear inventory first so items don't drop
+            player.getInventory().clear();
             // Use generic damage source that doesn't show death message
             player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
         }
