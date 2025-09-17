@@ -49,7 +49,7 @@ public class SharedAirManager {
 
             boolean invulnerable = player.getAbilities().invulnerable;
             boolean canBreathe = player.canBreatheInWater();
-            boolean isSubmerged = player.isSubmergedInWater() || player.isInsideWaterOrBubbleColumn();
+            boolean isSubmerged = player.isSubmergedInWater();
 
             if (!invulnerable && isSubmerged && !canBreathe) {
                 submergedPlayers.add(player);
