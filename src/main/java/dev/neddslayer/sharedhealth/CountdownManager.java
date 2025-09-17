@@ -117,9 +117,11 @@ public class CountdownManager {
 
             // Show pre-countdown every second
             if (preCountdownTicks % 20 == 0 && secondsLeft > 0) {
-                Text preCountdownMessage = Text.literal("Timer starting in: " + secondsLeft).formatted(Formatting.YELLOW, Formatting.BOLD);
+                Text preCountdownTitle = Text.literal("Timer starting in " + secondsLeft).formatted(Formatting.WHITE);
                 for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    player.sendMessage(preCountdownMessage, true);
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(preCountdownTitle));
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.SubtitleS2CPacket(Text.empty()));
+                    player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleFadeS2CPacket(0, 20, 0));
                     // Play tick sound
                     player.playSoundToPlayer(SoundEvents.UI_BUTTON_CLICK.value(), SoundCategory.MASTER, 1.0f, 1.0f);
                 }
