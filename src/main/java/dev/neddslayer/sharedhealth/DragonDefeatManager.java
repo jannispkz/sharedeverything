@@ -70,6 +70,17 @@ public class DragonDefeatManager {
         Text title = Text.literal("DRAGON DEFEATED!").formatted(Formatting.GOLD, Formatting.BOLD);
         Text subtitle = Text.literal("Time: " + timeString).formatted(Formatting.YELLOW);
 
+        // Play Pigstep music once at center of End (0, 68, 0) with massive radius
+        // This plays in all dimensions but is loudest in The End at these coords
+        for (ServerWorld world : server.getWorlds()) {
+            if (world.getRegistryKey() == net.minecraft.world.World.END) {
+                world.playSound(null, 0, 68, 0,
+                    SoundEvents.MUSIC_DISC_PIGSTEP.value(), SoundCategory.RECORDS,
+                    10.0f, 1.0f, world.getRandom().nextLong());
+                break;
+            }
+        }
+
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             // Show title for 15 seconds
             player.networkHandler.sendPacket(new net.minecraft.network.packet.s2c.play.TitleS2CPacket(title));
@@ -79,9 +90,6 @@ public class DragonDefeatManager {
             // Play victory sound and goat horn
             player.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 1.0f, 1.0f);
             player.playSoundToPlayer(net.minecraft.sound.SoundEvent.of(net.minecraft.util.Identifier.of("item.goat_horn.sound.0")), SoundCategory.MASTER, 1.0f, 1.0f);
-
-            // Play Pigstep music disc as ambient sound (follows player)
-            player.playSoundToPlayer(SoundEvents.MUSIC_DISC_PIGSTEP.value(), SoundCategory.AMBIENT, 0.5f, 1.0f);
 
             // Set player to creative mode
             player.changeGameMode(net.minecraft.world.GameMode.CREATIVE);
