@@ -36,29 +36,33 @@ public class DragonDefeatManager {
     public void onDragonDefeat() {
         if (isVictory) return; // Already celebrating
 
+        // Only celebrate if countdown was running (like death check)
+        if (SharedHealth.countdownManager == null || !SharedHealth.countdownManager.isActive()) {
+            // No celebration if no timer was running
+            return;
+        }
+
         this.isVictory = true;
         this.fireworkTicks = FIREWORK_DURATION;
         this.resetCountdownTicks = RESET_DELAY;
         this.statsShown = false;
 
-        // Stop the countdown timer if it's running
+        // Stop the countdown timer and get the time
+        SharedHealth.countdownManager.stop();
+
+        // Calculate elapsed time
         String timeString = "No Timer";
-        if (SharedHealth.countdownManager != null && SharedHealth.countdownManager.isActive()) {
-            SharedHealth.countdownManager.stop();
+        long elapsedMillis = System.currentTimeMillis() - SharedHealth.countdownManager.getStartTime();
+        if (elapsedMillis > 0) {
+            long totalSeconds = elapsedMillis / 1000;
+            long hours = totalSeconds / 3600;
+            long minutes = (totalSeconds % 3600) / 60;
+            long seconds = totalSeconds % 60;
 
-            // Calculate elapsed time
-            long elapsedMillis = System.currentTimeMillis() - SharedHealth.countdownManager.getStartTime();
-            if (elapsedMillis > 0) {
-                long totalSeconds = elapsedMillis / 1000;
-                long hours = totalSeconds / 3600;
-                long minutes = (totalSeconds % 3600) / 60;
-                long seconds = totalSeconds % 60;
-
-                if (hours > 0) {
-                    timeString = String.format("%d:%02d:%02d", hours, minutes, seconds);
-                } else {
-                    timeString = String.format("%d:%02d", minutes, seconds);
-                }
+            if (hours > 0) {
+                timeString = String.format("%d:%02d:%02d", hours, minutes, seconds);
+            } else {
+                timeString = String.format("%d:%02d", minutes, seconds);
             }
         }
 
