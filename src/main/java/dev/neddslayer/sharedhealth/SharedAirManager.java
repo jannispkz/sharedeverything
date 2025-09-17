@@ -1,9 +1,15 @@
 package dev.neddslayer.sharedhealth;
 
 import dev.neddslayer.sharedhealth.components.SharedAirComponent;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +44,7 @@ public class SharedAirManager {
         }
 
         List<ServerPlayerEntity> submergedPlayers = new ArrayList<>();
+        boolean hasBubbleAirPlayer = false;
         int computedMaxAir = 0;
 
         for (ServerPlayerEntity player : players) {
@@ -50,8 +57,16 @@ public class SharedAirManager {
             boolean invulnerable = player.getAbilities().invulnerable;
             boolean canBreathe = player.canBreatheInWater();
             boolean isSubmerged = player.isSubmergedInWater();
+            boolean bubbleAir = false;
 
-            if (!invulnerable && isSubmerged && !canBreathe) {
+            if (isSubmerged && !canBreathe) {
+                bubbleAir = hasBubbleColumnAir(player);
+                if (bubbleAir) {
+                    hasBubbleAirPlayer = true;
+                }
+            }
+
+            if (!invulnerable && isSubmerged && !canBreathe && !bubbleAir) {
                 submergedPlayers.add(player);
             }
         }
@@ -68,6 +83,8 @@ public class SharedAirManager {
         int newAir = sharedAir;
         if (!submergedPlayers.isEmpty()) {
             newAir = Math.max(sharedAir - submergedPlayers.size(), 0);
+        } else if (hasBubbleAirPlayer) {
+            newAir = sharedMaxAir;
         } else if (sharedAir < sharedMaxAir) {
             newAir = Math.min(sharedMaxAir, sharedAir + REGEN_RATE);
         }
@@ -152,5 +169,36 @@ public class SharedAirManager {
                 player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().drown(), damageAmount);
             }
         }
+    }
+
+    private boolean hasBubbleColumnAir(ServerPlayerEntity player) {
+        ServerWorld world = player.getServerWorld();
+        Box box = player.getBoundingBox();
+
+        int minX = MathHelper.floor(box.minX);
+        int maxX = MathHelper.floor(box.maxX + 1.0E-6);
+        int minY = MathHelper.floor(box.minY);
+        int maxY = MathHelper.floor(box.maxY + 1.0E-6);
+        int minZ = MathHelper.floor(box.minZ);
+        int maxZ = MathHelper.floor(box.maxZ + 1.0E-6);
+
+        for (BlockPos pos : BlockPos.iterate(minX, minY, minZ, maxX, maxY, maxZ)) {
+            BlockState state = world.getBlockState(pos);
+            if (state.isOf(Blocks.BUBBLE_COLUMN)) {
+                return true;
+            }
+
+            BlockPos belowPos = pos.down();
+            BlockState below = world.getBlockState(belowPos);
+            if ((below.isOf(Blocks.MAGMA_BLOCK) || below.isOf(Blocks.SOUL_SAND)) && isWater(state)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean isWater(BlockState state) {
+        return state.getFluidState().isOf(Fluids.WATER) || state.getFluidState().isOf(Fluids.FLOWING_WATER);
     }
 }
