@@ -4,7 +4,7 @@ A fork of [Neddslayer's SharedHealth](https://github.com/Neddslayer/sharedhealth
 
 ## Why This Fork Exists
 
-I found the original SharedHealth mod and noticed it skipped 1.21.4, so I thought "how hard could it be to port it?" Well, after successfully porting it, I started adding features my friends and I wanted for our speedrun challenges. One thing led to another, and it evolved into this speedrun-focused hybrid. So if you like this kind of stuff feel free to use it
+I found the original SharedHealth mod and noticed it skipped 1.21.4, so I thought "how hard could it be to port it?" Well, after successfully porting it, I started adding features my friends and I wanted for our speedrun challenges. One thing led to another, and it evolved into this speedrun-focused hybrid. So if you like this kind of stuff feel free to use it.
 
 ⚠️ **WARNING: This mod includes AUTO WORLD DELETION features for speedrun resets. Read carefully before using!** ⚠️
 
@@ -22,8 +22,9 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 - **Shared Status Effects** (`/gamerule shareStatusEffects`)
 - **Shared Experience** (`/gamerule shareExperience`)
 - **Shared Ender Pearls** (`/gamerule shareEnderPearls`)
-- **Shared Air/Oxygen** (`/gamerule shareAir`) - Advanced underwater breathing mechanics
-- **Shared Fire** (`/gamerule shareFire`) - Fire damage and burning state synchronized
+- **Shared Air/Oxygen** (`/gamerule shareAir`) – Advanced underwater breathing mechanics
+- **Shared Fire** (`/gamerule shareFire`) – Fire damage and burning state synchronized
+- **Shared Freeze** (`/gamerule shareFreeze`) – Powder-snow freezing mirrors across the team
 - **Countdown Timer System** (`/countdownstart`, `/countdownstop`)
 - **Real-time Damage Feed** (sidebar scoreboard)
 - **Death System with Statistics** (team wipe mechanics)
@@ -31,6 +32,7 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 - **Coordinate Sharing** (`/coords <label>`)
 - **World Reset Commands** (`/reset`, automatic deletion)
 - **Auto World Preservation** (victory worlds saved as `victory_{timestamp}`)
+- **Run Leaderboard & History** (`/leaderboard`, `/history`) with persistent storage in `config/sharedhealth_runs.json`
 
 ---
 
@@ -39,7 +41,7 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 ### 🔄 Additional Sharing Options
 
 - **Shared Status Effects** (`/gamerule shareStatusEffects`)
-  - All players receive the same potion effects (depending on which one)
+  - All players receive eligible potion effects together
   - Synchronized duration and amplifier
 
 - **Shared Experience** (`/gamerule shareExperience`)
@@ -47,126 +49,105 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
   - Shared XP levels and points
 
 - **Shared Ender Pearls** (`/gamerule shareEnderPearls`)
-  - When one player uses an ender pearl, all players teleport
-  - Useful for keeping teams together
+  - Using an ender pearl teleports everyone to the throw location
   - Works across dimensions
 
 - **Shared Air/Oxygen** (`/gamerule shareAir`)
   - All players share the same air supply (oxygen bubbles)
-  - Advanced underwater mechanics:
-    - Air depletes faster with more players underwater
-    - Drowning damage affects the whole team
-    - Players not underwater still see shared air level
-  - Air regenerates when all players are above water
-  - Creates strategic coordination for underwater exploration
+  - Mechanics:
+    - Air drains per submerged player who cannot breathe
+    - Drowning damage hits everyone equally when air hits zero
+    - Players in bubble columns (magma/soul sand) don’t drain the shared supply
+  - Air regenerates only when nobody is drowning
 
 - **Shared Fire** (`/gamerule shareFire`)
-  - When one player catches fire, all players burn together
-  - Shared fire duration - longest fire time applies to all
-  - Smart extinguishing - water/rain extinguishes fire for everyone
-  - Fire damage prevention for "managed" burning (shared fire state)
-  - Only natural fire sources spread to team
+  - When one player is on fire, the burn spreads to everyone
+  - Natural burn sources define the shared burn duration
+  - Water/rain extinguishes everyone together
+  - Shared fire damage is canceled for teammates who only received fire from sync
 
+- **Shared Freeze** (`/gamerule shareFreeze`)
+  - Powder snow freezing spreads to every teammate
+  - Only natural powder-snow victims take freeze damage; synced players keep the visual freeze without damage
 
 ### 🎮 Core Speedrun System
 
 - **Countdown Timer** (`/countdownstart`, `/countdownstop`)
-  - Displays persistent timer in action bar
-  - Kills all players and resets them at spawn
-  - Applies blindness, slowness, and mining fatigue during pre-countdown
-  - Shows "Timer lööft" when starting (lööft meant runs in german but weirdly written)
-  - Persistent glowing effect on all players (reapplied every 3 seconds)
-  - Clears player inventories on start
+  - Displays timer in action bar
+  - Pre-countdown lobby (5 seconds): blindness, slowness, mining fatigue, glowing
+  - Lobby lockdown:
+    - Inventories cleared and players silently respawned at spawn
+    - World border clamped to 16-block radius and gradually expands after start
+    - `doImmediateRespawn` turned on
+    - No hunger drain, block breaking, or damage during lobby
+  - Start signal: “Timer lööft” title + goat horn
+  - Persistent glowing re-applied every 3 seconds during runs
 
 - **Damage Feed Sidebar**
-  - Real-time damage tracking displayed on the right side of screen
-  - Shows last 8 damage events across all players
-  - Format: `PlayerName took X damage from Source`
-    - Damage < 1: Shows decimal (e.g., "0.5")
-    - Damage ≥ 1: Shows whole number (e.g., "6")
-  - Color-coded by age:
-    - Red: Fresh damage (< 1 second)
-    - Gray: Recent damage (1-4 seconds)
-    - Dark Gray: Old damage (4-6 seconds)
-    - Auto-removes after 6 seconds
-  - Updates every 500ms for smooth transitions
-  - Automatically hides when empty
-  - Reset with `/resetscoreboard` 
+  - Tracks last eight damage events with color-coded aging
+  - Updates every 500ms; clears automatically
+  - Reset using `/resetscoreboard`
 
 - **Death System Overhaul**
-  - Team death only triggers during active countdown
-  - "EVERYONE DIED" title with wither spawn sound
-  - Shows death statistics (deaths, kills, damage dealt/taken, distance walked)
-  - **Automatic world deletion after 30 seconds**
+  - Team wipes only trigger if countdown is active
+  - “EVERYONE DIED” title and wither spawn sound
+  - Displays death summary (deaths, kills, damage, distance)
+  - Records the run in the historical log with failure cause
+  - Auto world deletion 30 seconds after wipe
 
 ### 🐉 Ender Dragon Victory Celebration
 
-**Only triggers if countdown was active!**
+*(Only triggers if countdown was active)*
 
-- **Epic Victory Sequence**:
-  - "DRAGON DEFEATED!" golden title (15 seconds)
-  - Displays completion time
-  - Pigstep music plays from End center (0, 68, 0)
-  - Goat horn victory sound
-  - Fireworks every 0.5 seconds for 10 seconds
-  - Comprehensive statistics display (MVP player, total stats)
-
-- **Player Protection**:
-  - Creative mode for all players
-  - Regeneration 100 (instant healing)
-  - Resistance 100 (damage immunity)
-  - Glowing effect
-  - Fall damage disabled
-  - Effects reapplied every 2 seconds (milk-proof)
-  - Deaths during victory don't trigger run reset
-
-- **End Portal Prevention**:
-  - No portal spawns after dragon death
-  - Players stay in The End for celebration
-
-- **World Preservation**:
-  - Victory worlds renamed to `victory_{timestamp}`
-  - Failed runs delete world completely
-  - 60-second countdown before server reset
+- Golden “DRAGON DEFEATED!” title with completion time
+- Pigstep music, goat horn fanfare, fireworks
+- Creative mode, regeneration 100, resistance 100, glowing for all
+- Fall damage disabled; effects reapplied every 2 seconds
+- Victory statistics broadcast with MVP calculation
+- Victory run recorded in leaderboard data
+- World saved under `victory_{timestamp}`
 
 ### 📝 Utility Commands
 
-- **`/coords <label>`**: Share coordinates with all players
-  - Displays as blue text with dimension indicator
-  - Example: "123, 64, -456 [Base] [Nether]"
+- **`/coords <label>`** – Share coordinates + dimension tag to all players
+- **`/reset`** – Immediate world deletion and server shutdown (no confirmation)
+- **`/resetscoreboard`** – Clear damage feed sidebar
+- **`/leaderboard`** – Show top 5 recorded runs (victories first, faster runs first)
+- **`/history`** – Show your last 5 runs (victory/failure, time, MVP/cause)
 
-- **`/reset`**: Force immediate world reset
-  - Instantly deletes world and restarts server
-  - No countdown or warning
+### 🧾 Run Tracking & MVP
 
-- **`/resetscoreboard`**: Clear the damage feed display
+- Runs (victory or failure) are saved to `config/sharedhealth_runs.json`
+- Each entry stores:
+  - Victory status
+  - Duration
+  - Participants list
+  - MVP (player with highest damage + kills score)
+  - Failure cause (first death message) when applicable
+  - Timestamp
 
 ### 🔧 Technical Improvements
 
-- Tab list player names update across dimensions
-- Death sounds play correctly from any dimension
-- Shutdown manager with proper world cleanup
-- Enhanced component synchronization
-- Proper countdown state management
+- Tab list names update across dimensions
+- Proper shutdown manager with world cleanup
+- Countdown state tightly controlled to avoid exploits
+- Lobby boundaries animate from radius 16 → 100 → 1,000,000 during start
 
 ---
 
 ## ⚠️ IMPORTANT WARNINGS
 
 1. **This mod WILL DELETE YOUR WORLD when:**
-   - Players die during an active countdown (30 seconds after death)
-   - Using the `/reset` command
-   - NOT when dying without active countdown
+   - Any player dies during an active countdown (30 seconds later)
+   - Someone runs `/reset`
+   - (Safe) Deaths outside countdown do not delete the world
 
-2. **Victory worlds are PRESERVED as `victory_{timestamp}` folders**
-   - These accumulate over time
-   - Manual cleanup required
+2. **Victory worlds are preserved** as `victory_{timestamp}` folders
+   - Clean them up periodically if storage matters
 
-3. **The `/reset` command has NO CONFIRMATION and is usable by ANYONE**
-   - Any player can run `/reset` and immediately delete the world
-   - Instantly stops the server without warning
-   - Built for private friend groups, NOT public servers
-   - Use with extreme caution or restrict via permissions plugin
+3. **`/reset` is unprotected**
+   - Any player can run it and nuke the world immediately
+   - Designed for private friend groups, not public servers
 
 ---
 
@@ -177,33 +158,20 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 3. Requires Cardinal Components API
 4. Built for Minecraft 1.21.4
 
-**Note**: This mod is designed to run **server-side only**. I built and tested it for my server environment and did not test client-side functionality, since the mod doesn't require installation on both server and client.
-
-**Server Setup**: I highly recommend using a **server restart script** to automatically restart the server after world deletion. The mod stops the server when worlds are reset, and a restart script ensures it comes back online with a fresh world automatically.
+> **Note:** Mod is built for server-side use. Clients do not need the mod installed.
 
 ### Recommended Companion Mod
 
-I highly recommend using [SharedInv](https://modrinth.com/mod/sharedinv) alongside this mod to sync inventories between players as well. This creates a complete shared experience where health, hunger, effects, AND inventory are all synchronized across the team.
+Use [SharedInv](https://modrinth.com/mod/sharedinv) to share inventories for a fully synchronized experience.
 
 ---
 
 ## Configuration
 
-All features controlled via gamerules and commands. No config file needed.
-
-Default gamerules can be modified in server.properties or via commands.
+Everything is controlled via gamerules and commands – no manual config required (other than the automatically generated run history file).
 
 ---
 
 ## License
 
-Original SharedHealth mod by Neddslayer (GPL-3.0)
-This fork maintains the same license
-
----
-
-## Credits
-
-- Original mod by [Neddslayer](https://github.com/Neddslayer)
-- Speedrun features added for competitive challenge runs
-- Built for Minecraft 1.21.4
+Original SharedHealth mod by Neddslayer (GPL-3.0); this fork inherits the same license.
