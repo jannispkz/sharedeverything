@@ -44,7 +44,6 @@ public class SharedAirManager {
         }
 
         List<ServerPlayerEntity> submergedPlayers = new ArrayList<>();
-        boolean hasBubbleAirPlayer = false;
         int computedMaxAir = 0;
 
         for (ServerPlayerEntity player : players) {
@@ -57,14 +56,7 @@ public class SharedAirManager {
             boolean invulnerable = player.getAbilities().invulnerable;
             boolean canBreathe = player.canBreatheInWater();
             boolean isSubmerged = player.isSubmergedInWater();
-            boolean bubbleAir = false;
-
-            if (isSubmerged && !canBreathe) {
-                bubbleAir = hasBubbleColumnAir(player);
-                if (bubbleAir) {
-                    hasBubbleAirPlayer = true;
-                }
-            }
+            boolean bubbleAir = isSubmerged && !canBreathe && hasBubbleColumnAir(player);
 
             if (!invulnerable && isSubmerged && !canBreathe && !bubbleAir) {
                 submergedPlayers.add(player);
@@ -83,8 +75,6 @@ public class SharedAirManager {
         int newAir = sharedAir;
         if (!submergedPlayers.isEmpty()) {
             newAir = Math.max(sharedAir - submergedPlayers.size(), 0);
-        } else if (hasBubbleAirPlayer) {
-            newAir = sharedMaxAir;
         } else if (sharedAir < sharedMaxAir) {
             newAir = Math.min(sharedMaxAir, sharedAir + REGEN_RATE);
         }
