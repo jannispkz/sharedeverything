@@ -97,17 +97,20 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             deathSummaryShown = false;
         }
 
-        // Kill all players (use list copy to avoid concurrent modification)
-        java.util.List<ServerPlayerEntity> players = new java.util.ArrayList<>(world.getPlayers());
-        players.forEach(p -> p.kill(world));
+        // Kill all players across all dimensions (use list copy to avoid concurrent modification)
+        java.util.List<ServerPlayerEntity> allPlayers = new java.util.ArrayList<>();
+        for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+            allPlayers.addAll(serverWorld.getPlayers());
+        }
+        allPlayers.forEach(p -> p.kill(p.getServerWorld()));
 
         // Show death title to all players
         net.minecraft.text.Text deathTitle = net.minecraft.text.Text.literal("EVERYONE DIED").formatted(net.minecraft.util.Formatting.RED);
 
-        // Schedule sounds and title to play after respawn (slight delay)
+        // Schedule sounds and title to play after respawn (with delay)
         world.getServer().execute(() -> {
             try {
-                Thread.sleep(100); // Small delay to ensure players have respawned
+                Thread.sleep(500); // 500ms delay to ensure players have fully respawned and loaded
             } catch (InterruptedException e) {
                 // Ignore
             }
