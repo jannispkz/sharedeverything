@@ -22,6 +22,7 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 - **Shared Status Effects** (`/gamerule shareStatusEffects`)
 - **Shared Experience** (`/gamerule shareExperience`)
 - **Shared Ender Pearls** (`/gamerule shareEnderPearls`)
+- **Shared Air/Oxygen** (`/gamerule shareAir`) - Advanced underwater breathing mechanics
 - **Countdown Timer System** (`/countdownstart`, `/countdownstop`)
 - **Real-time Damage Feed** (sidebar scoreboard)
 - **Death System with Statistics** (team wipe mechanics)
@@ -48,6 +49,16 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
   - When one player uses an ender pearl, all players teleport
   - Useful for keeping teams together
   - Works across dimensions
+
+- **Shared Air/Oxygen** (`/gamerule shareAir`)
+  - All players share the same air supply (oxygen bubbles)
+  - Advanced underwater mechanics:
+    - Air depletes faster with more players underwater
+    - Drowning damage affects the whole team
+    - Players not underwater still see shared air level
+  - Air regenerates when all players are above water
+  - Creates strategic coordination for underwater exploration
+
 
 ### 🎮 Core Speedrun System
 
