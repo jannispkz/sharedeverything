@@ -12,6 +12,7 @@
     "LivingEntityMixin",
     "PlayerEntityMixin",
     "PlayerListEntryMixin",
+    "ServerPlayerInteractionManagerMixin",
     "SaturationStatusEffectMixin",
     "ServerPlayerEntityMixin",
     "StatusEffectMixin"

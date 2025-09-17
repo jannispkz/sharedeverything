@@ -1,5 +1,6 @@
 package dev.neddslayer.sharedhealth.mixin;
 
+import dev.neddslayer.sharedhealth.SharedHealth;
 import dev.neddslayer.sharedhealth.components.SharedExhaustionComponent;
 import dev.neddslayer.sharedhealth.components.SharedHungerComponent;
 import dev.neddslayer.sharedhealth.components.SharedSaturationComponent;
@@ -25,6 +26,13 @@ public class HungerManagerMixin {
 	@Shadow public float exhaustion;
 
 	@Shadow private int foodTickTimer;
+
+	@Inject(method = "update", at = @At("HEAD"), cancellable = true)
+	private void sharedhealth$skipLobbyHunger(ServerPlayerEntity player, CallbackInfo ci) {
+		if (SharedHealth.countdownManager != null && SharedHealth.countdownManager.isInLobbyState()) {
+			ci.cancel();
+		}
+	}
 
 	// hook into line 46
 	@Inject(method = "update", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/HungerManager;foodLevel:I", ordinal = 1, shift = At.Shift.BEFORE))

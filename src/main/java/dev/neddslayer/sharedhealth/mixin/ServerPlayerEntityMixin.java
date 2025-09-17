@@ -147,6 +147,16 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
         boolean isNewDeathWave = (currentTime - lastDeathTime) > 100;
         lastDeathTime = currentTime;
 
+        if (isNewDeathWave && shareHealthEnabled && SharedHealth.leaderboardManager != null && SharedHealth.countdownManager != null) {
+            long startTime = SharedHealth.countdownManager.getStartTime();
+            long durationMillis = startTime > 0 ? Math.max(System.currentTimeMillis() - startTime, 0) : 0;
+            if (durationMillis > 0 || startTime > 0) {
+                String causeMessage = damageSource.getDeathMessage((ServerPlayerEntity) (Object) this).getString();
+                String mvpName = SharedHealth.computeMvpName(world.getServer());
+                SharedHealth.leaderboardManager.recordRun(false, durationMillis, mvpName, causeMessage);
+            }
+        }
+
         // Reset flag if this is a new death wave
         if (isNewDeathWave) {
             deathSummaryShown = false;

@@ -20,15 +20,20 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.stat.Stats;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.border.WorldBorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static dev.neddslayer.sharedhealth.components.SharedComponentsInitializer.*;
 
 public class SharedHealth implements ModInitializer {
+
+    public static final Logger LOGGER = LoggerFactory.getLogger("SharedHealth");
 
     public static final GameRules.Key<GameRules.BooleanRule> SYNC_HEALTH =
             GameRuleRegistry.register("shareHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
@@ -65,6 +70,7 @@ public class SharedHealth implements ModInitializer {
     public static SharedAirManager sharedAirManager;
     public static SharedFireManager sharedFireManager;
     public static SharedFreezeManager sharedFreezeManager;
+    public static LeaderboardManager leaderboardManager;
     public static boolean isResettingPlayers = false;
     public static boolean isDeathWave = false;
     public static long deathWaveTime = 0;
@@ -216,6 +222,17 @@ public class SharedHealth implements ModInitializer {
 
                     return 1;
                 }));
+
+            dispatcher.register(CommandManager.literal("leaderboard")
+                .requires(source -> true)
+                .executes(context -> {
+                    if (leaderboardManager != null) {
+                        leaderboardManager.sendLeaderboard(context.getSource());
+                    } else {
+                        context.getSource().sendError(Text.literal("Leaderboard data is not available yet."));
+                    }
+                    return 1;
+                }));
         });
 
         // Initialize managers when server starts
@@ -227,6 +244,7 @@ public class SharedHealth implements ModInitializer {
             sharedAirManager = new SharedAirManager(server);
             sharedFireManager = new SharedFireManager(server);
             sharedFreezeManager = new SharedFreezeManager(server);
+            leaderboardManager = new LeaderboardManager(server);
 
             applyInitialWorldBorder(server);
         });
@@ -258,6 +276,10 @@ public class SharedHealth implements ModInitializer {
             if (sharedFreezeManager != null) {
                 sharedFreezeManager.resetState();
                 sharedFreezeManager = null;
+            }
+            if (leaderboardManager != null) {
+                leaderboardManager.save();
+                leaderboardManager = null;
             }
         });
 
@@ -549,6 +571,21 @@ public class SharedHealth implements ModInitializer {
             BlockPos spawn = world.getSpawnPos();
             border.setCenter(spawn.getX() + 0.5, spawn.getZ() + 0.5);
             border.setSize(INITIAL_BORDER_DIAMETER);
+            world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, server);
         }
+    }
+
+    public static String computeMvpName(MinecraftServer server) {
+        ServerPlayerEntity bestPlayer = null;
+        int bestScore = Integer.MIN_VALUE;
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            int score = player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT))
+                + player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.MOB_KILLS)) * 100;
+            if (score > bestScore) {
+                bestScore = score;
+                bestPlayer = player;
+            }
+        }
+        return bestPlayer != null ? bestPlayer.getName().getString() : null;
     }
 }

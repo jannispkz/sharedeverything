@@ -20,6 +20,7 @@ public class DragonDefeatManager {
     private int fireworkTicks;
     private int resetCountdownTicks;
     private boolean statsShown;
+    private long victoryDurationMillis;
     private static final int FIREWORK_DURATION = 200; // 10 seconds * 20 ticks
     private static final int FIREWORK_INTERVAL = 10; // 0.5 seconds * 20 ticks
     private static final int RESET_DELAY = 1200; // 60 seconds * 20 ticks
@@ -31,6 +32,7 @@ public class DragonDefeatManager {
         this.fireworkTicks = 0;
         this.resetCountdownTicks = 0;
         this.statsShown = false;
+        this.victoryDurationMillis = 0;
     }
 
     public void onDragonDefeat() {
@@ -53,6 +55,7 @@ public class DragonDefeatManager {
         // Calculate elapsed time
         String timeString = "No Timer";
         long elapsedMillis = System.currentTimeMillis() - SharedHealth.countdownManager.getStartTime();
+        this.victoryDurationMillis = elapsedMillis;
         if (elapsedMillis > 0) {
             long totalSeconds = elapsedMillis / 1000;
             long hours = totalSeconds / 3600;
@@ -174,6 +177,13 @@ public class DragonDefeatManager {
             }
 
             player.sendMessage(separator, false);
+        }
+
+        if (SharedHealth.leaderboardManager != null) {
+            long durationMillis = victoryDurationMillis > 0 ? victoryDurationMillis :
+                (SharedHealth.countdownManager != null ? Math.max(System.currentTimeMillis() - SharedHealth.countdownManager.getStartTime(), 0) : 0);
+            String mvpName = mvpPlayer != null ? mvpPlayer.getName().getString() : SharedHealth.computeMvpName(server);
+            SharedHealth.leaderboardManager.recordRun(true, durationMillis, mvpName, null);
         }
     }
 
@@ -320,6 +330,7 @@ public class DragonDefeatManager {
         this.fireworkTicks = 0;
         this.resetCountdownTicks = 0;
         this.statsShown = false;
+        this.victoryDurationMillis = 0;
 
         // Re-enable fall damage for next run
         for (ServerWorld world : server.getWorlds()) {

@@ -41,6 +41,7 @@ public class CountdownManager {
         // Start the 5-second pre-countdown with blindness
         this.isPreCountdown = true;
         this.preCountdownTicks = PRE_COUNTDOWN_DELAY;
+        this.borderExpandDelayTicks = -1;
 
         // Clear inventories and kill all players silently to reset them at spawn
         SharedHealth.isResettingPlayers = true;
@@ -84,7 +85,7 @@ public class CountdownManager {
         }
 
         // Ease the world border out so players can watch it expand before unlocking
-        setWorldBorderDiameter(200.0, false, 10_000L); // 100-block radius over 10 seconds
+        setWorldBorderDiameter(200.0, false, 200L); // 100-block radius over 10 seconds
         borderExpandDelayTicks = 200; // wait 10 seconds before unlocking fully
     }
 
@@ -99,6 +100,10 @@ public class CountdownManager {
 
     public long getStartTime() {
         return startTime;
+    }
+
+    public boolean isInLobbyState() {
+        return !isActive && !isPreCountdown;
     }
 
     public void tick() {
