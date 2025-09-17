@@ -353,10 +353,26 @@ public class SharedHealth implements ModInitializer {
             }
         }));
 
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> handler.player.setHealth(SHARED_HEALTH.get(handler.player.getWorld().getScoreboard()).getHealth()));
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            // Set joining player to shared values
+            handler.player.setHealth(SHARED_HEALTH.get(handler.player.getWorld().getScoreboard()).getHealth());
+            handler.player.getHungerManager().setFoodLevel(SHARED_HUNGER.get(handler.player.getWorld().getScoreboard()).getHunger());
+            handler.player.getHungerManager().setSaturationLevel(SHARED_SATURATION.get(handler.player.getWorld().getScoreboard()).getSaturation());
+            handler.player.getHungerManager().exhaustion = SHARED_EXHAUSTION.get(handler.player.getWorld().getScoreboard()).getExhaustion();
+        });
 
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
-            newPlayer.setHealth(SHARED_HEALTH.get(newPlayer.getWorld().getScoreboard()).getHealth());
+            // Always respawn with full health and hunger for clean experience
+            newPlayer.setHealth(20.0f);
+            newPlayer.getHungerManager().setFoodLevel(20);
+            newPlayer.getHungerManager().setSaturationLevel(20.0f);
+            newPlayer.getHungerManager().exhaustion = 0.0f;
+
+            // Update shared components to match
+            SHARED_HEALTH.get(newPlayer.getWorld().getScoreboard()).setHealth(20.0f);
+            SHARED_HUNGER.get(newPlayer.getWorld().getScoreboard()).setHunger(20);
+            SHARED_SATURATION.get(newPlayer.getWorld().getScoreboard()).setSaturation(20.0f);
+            SHARED_EXHAUSTION.get(newPlayer.getWorld().getScoreboard()).setExhaustion(0.0f);
 
             // Check if this respawn is part of a death wave (within 2 seconds of death)
             if (isDeathWave && (System.currentTimeMillis() - deathWaveTime) < 2000) {
