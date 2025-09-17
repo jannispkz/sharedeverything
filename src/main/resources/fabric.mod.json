@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "id": "sharedhealth",
   "version": "${version}",
-  "name": "Shared Health",
-  "description": "A simple and lightweight mod that makes players share a collective health and/or hunger value",
-  "authors": ["Neddslayer"],
+  "name": "Shared Health Speedrun Edition",
+  "description": "Fork of SharedHealth with speedrun features: countdown timer, damage feed, dragon victory celebration, auto world resets for 1.21.4",
+  "authors": ["Neddslayer", "jannispkz"],
   "contact": {
-    "repo": "https://github.com/neddslayer/sharedhealth"
+    "repo": "https://github.com/jannispkz/SharedHealth-Speedrun-Edition"
   },
   "license": "GPL-3.0",
   "icon": "assets/sharedhealth/textures/icon.png",

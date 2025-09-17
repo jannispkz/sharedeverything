@@ -39,3 +39,6 @@ replay_*.log
 
 # docs
 docs/
+
+# claude
+.claude/
