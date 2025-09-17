@@ -56,6 +56,18 @@ public class SharedHealth implements ModInitializer {
     public static boolean isResettingPlayers = false;
     public static boolean isDeathWave = false;
     public static long deathWaveTime = 0;
+    public static java.util.UUID pendingSharedAirPlayer = null;
+    public static float pendingSharedAirDamage = -1.0f;
+
+    public static void setPendingSharedAir(java.util.UUID playerId, float damage) {
+        pendingSharedAirPlayer = playerId;
+        pendingSharedAirDamage = damage;
+    }
+
+    public static void clearPendingSharedAir() {
+        pendingSharedAirPlayer = null;
+        pendingSharedAirDamage = -1.0f;
+    }
 
     /**
      * Runs the mod initializer.

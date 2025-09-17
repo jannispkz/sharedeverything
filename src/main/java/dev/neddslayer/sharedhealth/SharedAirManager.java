@@ -125,7 +125,12 @@ public class SharedAirManager {
             float totalDamage = BASE_DROWN_DAMAGE * events * submergedPlayers.size();
             ServerPlayerEntity target = submergedPlayers.get(0);
             if (target.isAlive() && !target.getAbilities().invulnerable) {
-                target.damage(target.getServerWorld(), target.getServerWorld().getDamageSources().drown(), totalDamage);
+                SharedHealth.setPendingSharedAir(target.getUuid(), BASE_DROWN_DAMAGE * events);
+                try {
+                    target.damage(target.getServerWorld(), target.getServerWorld().getDamageSources().drown(), totalDamage);
+                } finally {
+                    SharedHealth.clearPendingSharedAir();
+                }
 
                 if (SharedHealth.damageFeedManager != null && submergedPlayers.size() > 1) {
                     for (int i = 1; i < submergedPlayers.size(); i++) {

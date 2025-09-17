@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import dev.neddslayer.sharedhealth.SharedHealth;
 import dev.neddslayer.sharedhealth.components.SharedHealthComponent;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -38,17 +39,25 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 			float currentHealth = this.getHealth();
 			SharedHealthComponent component = SHARED_HEALTH.get(this.getScoreboard());
 			float knownHealth = component.getHealth();
-			if (currentHealth != knownHealth) {
-				component.setHealth(currentHealth);
-			}
+            if (currentHealth != knownHealth) {
+                component.setHealth(currentHealth);
+            }
 
-			// Add damage to the feed
-			if (SharedHealth.damageFeedManager != null) {
-				float actualDamage = knownHealth - currentHealth;
-				if (actualDamage > 0) {
-					String damageType;
+            float actualDamage = knownHealth - currentHealth;
 
-					// Check if damage has an attacker entity (mob or player)
+            if (SharedHealth.pendingSharedAirPlayer != null
+                && SharedHealth.pendingSharedAirPlayer.equals(this.getUuid())
+                && source.isOf(DamageTypes.DROWN)
+                && SharedHealth.pendingSharedAirDamage >= 0.0f) {
+                actualDamage = SharedHealth.pendingSharedAirDamage;
+            }
+
+            // Add damage to the feed
+            if (SharedHealth.damageFeedManager != null) {
+                if (actualDamage > 0) {
+                    String damageType;
+
+                    // Check if damage has an attacker entity (mob or player)
 					if (source.getAttacker() != null) {
 						// Check if attacker is a player - use their actual name
 						if (source.getAttacker() instanceof PlayerEntity) {
@@ -63,9 +72,15 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
 					}
 
 					SharedHealth.damageFeedManager.addDamageEntry(this.getName().getString(), actualDamage, damageType);
-				}
-			}
-		}
+                }
+            }
+
+            if (SharedHealth.pendingSharedAirPlayer != null
+                && SharedHealth.pendingSharedAirPlayer.equals(this.getUuid())
+                && source.isOf(DamageTypes.DROWN)) {
+                SharedHealth.clearPendingSharedAir();
+            }
+        }
     }
 
     @Inject(method = "onDeath", at = @At("TAIL"))
