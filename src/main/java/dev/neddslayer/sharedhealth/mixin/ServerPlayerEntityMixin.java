@@ -33,8 +33,13 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     }
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
-    private void cancelSharedFireDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    private void cancelSharedEnvironmentalDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (SharedHealth.sharedFireManager != null && SharedHealth.sharedFireManager.shouldCancelFireDamage((ServerPlayerEntity) (Object) this, source)) {
+            cir.setReturnValue(false);
+            cir.cancel();
+            return;
+        }
+        if (SharedHealth.sharedFreezeManager != null && SharedHealth.sharedFreezeManager.shouldCancelFreezeDamage((ServerPlayerEntity) (Object) this, source)) {
             cir.setReturnValue(false);
             cir.cancel();
         }

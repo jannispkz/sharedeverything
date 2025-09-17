@@ -12,6 +12,9 @@
   "gamerule.shareFire": "Share burning effect across all players",
   "gamerule.shareFire.enabled": "Shared fire has been enabled!",
   "gamerule.shareFire.disabled": "Shared fire has been disabled!",
+  "gamerule.shareFreeze": "Share freezing effect across all players",
+  "gamerule.shareFreeze.enabled": "Shared freeze has been enabled!",
+  "gamerule.shareFreeze.disabled": "Shared freeze has been disabled!",
   "gamerule.limitHealth": "Limit maximum health to 20",
   "gamerule.limitHealth.description": "Disable this for compatibility with some mods"
 }
