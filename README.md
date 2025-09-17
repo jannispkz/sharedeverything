@@ -4,7 +4,7 @@ A fork of [Neddslayer's SharedHealth](https://github.com/Neddslayer/sharedhealth
 
 ## Why This Fork Exists
 
-I found the original SharedHealth mod and noticed it skipped 1.21.4, so I thought "how hard could it be to port it?" Well, after successfully porting it, I started adding features my friends and I wanted for our speedrun challenges. One thing led to another, and it evolved into this speedrun-focused hybrid that we use regularly. If you enjoy this kind of competitive Minecraft gameplay, feel free to use it as well (at your own risk)!
+I found the original SharedHealth mod and noticed it skipped 1.21.4, so I thought "how hard could it be to port it?" Well, after successfully porting it, I started adding features my friends and I wanted for our speedrun challenges. One thing led to another, and it evolved into this speedrun-focused hybrid. So if you like this kind of stuff feel free to use it
 
 ⚠️ **WARNING: This mod includes AUTO WORLD DELETION features for speedrun resets. Read carefully before using!** ⚠️
 
