@@ -58,6 +58,7 @@ public class SharedHealth implements ModInitializer {
     public static long deathWaveTime = 0;
     public static java.util.UUID pendingSharedAirPlayer = null;
     public static float pendingSharedAirDamage = -1.0f;
+    public static boolean isGlobalDeathProcessing = false;
 
     public static void setPendingSharedAir(java.util.UUID playerId, float damage) {
         pendingSharedAirPlayer = playerId;

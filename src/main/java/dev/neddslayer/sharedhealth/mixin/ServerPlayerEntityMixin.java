@@ -87,6 +87,10 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     public void killEveryoneOnDeath(DamageSource damageSource, CallbackInfo ci) {
         ServerWorld world = this.getServerWorld();
 
+        if (SharedHealth.isGlobalDeathProcessing) {
+            return;
+        }
+
         // Check if this is a reset death - if so, ignore it
         if (SharedHealth.isResettingPlayers) {
             return; // This is a countdown reset death, ignore
@@ -97,9 +101,31 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
             return; // Victory celebration death, doesn't count as run failure
         }
 
-        // Check if countdown is running - if not, just do normal death
+        boolean shareHealthEnabled = world.getGameRules().getBoolean(SharedHealth.SYNC_HEALTH);
+
+        // If countdown isn't running, enforce shared health deaths manually
         if (SharedHealth.countdownManager == null || !SharedHealth.countdownManager.isActive()) {
-            return; // Normal death, no special effects
+            if (shareHealthEnabled) {
+                SharedHealthComponent component = SHARED_HEALTH.get(this.getScoreboard());
+                component.setHealth(0.0f);
+
+                SharedHealth.isGlobalDeathProcessing = true;
+                try {
+                    java.util.List<ServerPlayerEntity> allPlayers = new java.util.ArrayList<>();
+                    for (ServerWorld serverWorld : world.getServer().getWorlds()) {
+                        allPlayers.addAll(serverWorld.getPlayers());
+                    }
+
+                    for (ServerPlayerEntity player : allPlayers) {
+                        if (player != (ServerPlayerEntity)(Object)this && player.isAlive()) {
+                            player.kill(player.getServerWorld());
+                        }
+                    }
+                } finally {
+                    SharedHealth.isGlobalDeathProcessing = false;
+                }
+            }
+            return; // Normal death handling complete
         }
 
         // Check if this death event is part of the same death wave (within 100ms)
