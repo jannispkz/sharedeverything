@@ -143,9 +143,11 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
    - These accumulate over time
    - Manual cleanup required
 
-3. **The `/reset` command has NO CONFIRMATION**
-   - Immediately deletes world
-   - Use with extreme caution
+3. **The `/reset` command has NO CONFIRMATION and is usable by ANYONE**
+   - Any player can run `/reset` and immediately delete the world
+   - Instantly stops the server without warning
+   - Built for private friend groups, NOT public servers
+   - Use with extreme caution or restrict via permissions plugin
 
 ---
 
@@ -157,6 +159,8 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 4. Built for Minecraft 1.21.4
 
 **Note**: This mod is designed to run **server-side only**. I built and tested it for my server environment and did not test client-side functionality, since the mod doesn't require installation on both server and client.
+
+**Server Setup**: I highly recommend using a **server restart script** to automatically restart the server after world deletion. The mod stops the server when worlds are reset, and a restart script ensures it comes back online with a fresh world automatically.
 
 ### Recommended Companion Mod
 
