@@ -11,6 +11,7 @@
     "HungerManagerMixin",
     "LivingEntityMixin",
     "PlayerEntityMixin",
+    "MilkBucketItemMixin",
     "PlayerListEntryMixin",
     "SaturationStatusEffectMixin",
     "ServerPlayerEntityMixin",
