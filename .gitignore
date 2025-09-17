@@ -34,11 +34,15 @@ replay_*.log
 *.hprof
 *.jfr
 
-# allow mod jar in build/libs
-!build/libs/*.jar
+# jar files
+*.jar
+build/libs/*.jar
 
 # docs
 docs/
 
 # claude
 .claude/
+
+# local gradle properties
+gradle.local.properties

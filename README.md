@@ -156,6 +156,8 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 3. Requires Cardinal Components API
 4. Built for Minecraft 1.21.4
 
+**Note**: This mod is designed to run **server-side only**. I built and tested it for my server environment and did not test client-side functionality, since the mod doesn't require installation on both server and client.
+
 ### Recommended Companion Mod
 
 I highly recommend using [SharedInv](https://modrinth.com/mod/sharedinv) alongside this mod to sync inventories between players as well. This creates a complete shared experience where health, hunger, effects, AND inventory are all synchronized across the team.
