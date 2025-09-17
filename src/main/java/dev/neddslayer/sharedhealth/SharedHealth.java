@@ -233,6 +233,19 @@ public class SharedHealth implements ModInitializer {
                     }
                     return 1;
                 }));
+
+            dispatcher.register(CommandManager.literal("history")
+                .requires(source -> source.getEntity() instanceof ServerPlayerEntity)
+                .executes(context -> {
+                    if (leaderboardManager != null) {
+                        ServerPlayerEntity player = context.getSource().getPlayer();
+                        String name = player != null ? player.getName().getString() : "";
+                        leaderboardManager.sendHistory(context.getSource(), name);
+                    } else {
+                        context.getSource().sendError(Text.literal("History data is not available yet."));
+                    }
+                    return 1;
+                }));
         });
 
         // Initialize managers when server starts

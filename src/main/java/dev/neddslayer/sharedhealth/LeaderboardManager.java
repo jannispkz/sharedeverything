@@ -108,6 +108,40 @@ public class LeaderboardManager {
         }
     }
 
+    public synchronized void sendHistory(net.minecraft.server.command.ServerCommandSource source, String playerName) {
+        final int maxEntries = 5;
+        source.sendFeedback(() -> Text.literal("=== Recent Runs for " + playerName + " ===").formatted(Formatting.AQUA, Formatting.BOLD), false);
+
+        List<RunRecord> playerRuns = records.stream()
+            .filter(record -> record.participants.stream().anyMatch(name -> name.equalsIgnoreCase(playerName)))
+            .sorted(Comparator.comparingLong((RunRecord record) -> record.timestamp).reversed())
+            .limit(maxEntries)
+            .collect(Collectors.toList());
+
+        if (playerRuns.isEmpty()) {
+            source.sendFeedback(() -> Text.literal("No recorded runs yet."), false);
+            return;
+        }
+
+        for (RunRecord record : playerRuns) {
+            String status = record.victory ? "Victory" : "Failure";
+            String time = formatDuration(record.durationMillis);
+            String date = DATE_FORMAT.format(Instant.ofEpochMilli(record.timestamp));
+            StringBuilder line = new StringBuilder(status)
+                .append(" - ")
+                .append(time)
+                .append(" - ")
+                .append(date);
+            if (!record.victory && record.failureCause != null && !record.failureCause.isEmpty()) {
+                line.append(" - Cause: ").append(record.failureCause);
+            }
+            if (record.mvp != null && !record.mvp.isEmpty()) {
+                line.append(" - MVP: ").append(record.mvp);
+            }
+            source.sendFeedback(() -> Text.literal(line.toString()).formatted(record.victory ? Formatting.GREEN : Formatting.RED), false);
+        }
+    }
+
     private void load() {
         try {
             Files.createDirectories(dataFile.getParent());
