@@ -28,8 +28,15 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
     @Shadow
     public abstract ServerWorld getServerWorld();
 
-	public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
+    public ServerPlayerEntityMixin(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
         super(world, pos, yaw, gameProfile);
+    }
+
+    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
+    private void cancelSharedFireDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (SharedHealth.sharedFireManager != null && SharedHealth.sharedFireManager.shouldCancelFireDamage((ServerPlayerEntity) (Object) this, source)) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Inject(method = "damage", at = @At("RETURN"))
@@ -80,6 +87,7 @@ public abstract class ServerPlayerEntityMixin extends PlayerEntity {
                 && source.isOf(DamageTypes.DROWN)) {
                 SharedHealth.clearPendingSharedAir();
             }
+
         }
     }
 

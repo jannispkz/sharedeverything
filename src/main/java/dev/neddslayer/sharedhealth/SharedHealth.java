@@ -39,6 +39,8 @@ public class SharedHealth implements ModInitializer {
             GameRuleRegistry.register("shareExperience", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> SYNC_AIR =
             GameRuleRegistry.register("shareAir", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
+    public static final GameRules.Key<GameRules.BooleanRule> SYNC_FIRE =
+            GameRuleRegistry.register("shareFire", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     public static final GameRules.Key<GameRules.BooleanRule> LIMIT_HEALTH =
             GameRuleRegistry.register("limitHealth", GameRules.Category.PLAYER, GameRuleFactory.createBooleanRule(true));
     private static boolean lastHealthValue = true;
@@ -47,12 +49,14 @@ public class SharedHealth implements ModInitializer {
     private static boolean lastStatusEffectsValue = true;
     private static boolean lastExperienceValue = true;
     private static boolean lastAirValue = true;
+    private static boolean lastFireValue = true;
     private static int tabListUpdateCounter = 0;
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
     public static ShutdownManager shutdownManager;
     public static DragonDefeatManager dragonDefeatManager;
     public static SharedAirManager sharedAirManager;
+    public static SharedFireManager sharedFireManager;
     public static boolean isResettingPlayers = false;
     public static boolean isDeathWave = false;
     public static long deathWaveTime = 0;
@@ -213,6 +217,7 @@ public class SharedHealth implements ModInitializer {
             shutdownManager = new ShutdownManager(server);
             dragonDefeatManager = new DragonDefeatManager(server);
             sharedAirManager = new SharedAirManager(server);
+            sharedFireManager = new SharedFireManager(server);
         });
 
         // Clear managers when server stops
@@ -234,6 +239,9 @@ public class SharedHealth implements ModInitializer {
             }
             if (sharedAirManager != null) {
                 sharedAirManager = null;
+            }
+            if (sharedFireManager != null) {
+                sharedFireManager = null;
             }
         });
 
@@ -270,6 +278,9 @@ public class SharedHealth implements ModInitializer {
                         }
                     }
                 }
+                if (sharedFireManager != null) {
+                    sharedFireManager.tick(world.getGameRules().getBoolean(SYNC_FIRE));
+                }
             }
 
             // Update tab list every 1 second (20 ticks)
@@ -300,6 +311,7 @@ public class SharedHealth implements ModInitializer {
             boolean currentStatusEffectsValue = world.getGameRules().getBoolean(SYNC_STATUS_EFFECTS);
             boolean currentExperienceValue = world.getGameRules().getBoolean(SYNC_EXPERIENCE);
             boolean currentAirValue = world.getGameRules().getBoolean(SYNC_AIR);
+            boolean currentFireValue = world.getGameRules().getBoolean(SYNC_FIRE);
             boolean limitHealthValue = world.getGameRules().getBoolean(LIMIT_HEALTH);
             if (currentHealthValue != lastHealthValue && currentHealthValue) {
                 world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareHealth.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
@@ -354,6 +366,17 @@ public class SharedHealth implements ModInitializer {
                 airComponent.setAir(airComponent.getMaxAir());
                 airComponent.setDrowningTicks(0);
                 lastAirValue = false;
+            }
+            if (currentFireValue != lastFireValue && currentFireValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareFire.enabled").formatted(Formatting.GREEN, Formatting.BOLD), false));
+                lastFireValue = true;
+            }
+            else if (currentFireValue != lastFireValue) {
+                world.getPlayers().forEach(player -> player.sendMessageToClient(Text.translatable("gamerule.shareFire.disabled").formatted(Formatting.RED, Formatting.BOLD), false));
+                if (sharedFireManager != null) {
+                    sharedFireManager.resetState();
+                }
+                lastFireValue = false;
             }
             if (world.getGameRules().getBoolean(SYNC_HEALTH)) {
                 SharedHealthComponent component = SHARED_HEALTH.get(world.getScoreboard());
