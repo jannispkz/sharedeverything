@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -21,7 +22,9 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.border.WorldBorder;
 
 import static dev.neddslayer.sharedhealth.components.SharedComponentsInitializer.*;
 
@@ -54,6 +57,7 @@ public class SharedHealth implements ModInitializer {
     private static boolean lastFireValue = true;
     private static boolean lastFreezeValue = true;
     private static int tabListUpdateCounter = 0;
+    private static final double INITIAL_BORDER_DIAMETER = 32.0; // 16 block radius
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
     public static ShutdownManager shutdownManager;
@@ -223,6 +227,8 @@ public class SharedHealth implements ModInitializer {
             sharedAirManager = new SharedAirManager(server);
             sharedFireManager = new SharedFireManager(server);
             sharedFreezeManager = new SharedFreezeManager(server);
+
+            applyInitialWorldBorder(server);
         });
 
         // Clear managers when server stops
@@ -535,5 +541,14 @@ public class SharedHealth implements ModInitializer {
                 }
             }
         });
+    }
+
+    private static void applyInitialWorldBorder(MinecraftServer server) {
+        for (ServerWorld world : server.getWorlds()) {
+            WorldBorder border = world.getWorldBorder();
+            BlockPos spawn = world.getSpawnPos();
+            border.setCenter(spawn.getX() + 0.5, spawn.getZ() + 0.5);
+            border.setSize(INITIAL_BORDER_DIAMETER);
+        }
     }
 }

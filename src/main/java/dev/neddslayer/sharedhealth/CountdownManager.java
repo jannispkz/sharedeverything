@@ -2,10 +2,13 @@ package dev.neddslayer.sharedhealth;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.border.WorldBorder;
 
 public class CountdownManager {
     private final MinecraftServer server;
@@ -19,6 +22,8 @@ public class CountdownManager {
     private static final int BLINDNESS_DURATION = 120; // 6 seconds * 20 ticks
     private static final int DEBUFF_DURATION = 100; // 5 seconds * 20 ticks
     private static final int BLINDNESS_DELAY = 10; // 0.5 seconds * 20 ticks
+    private static final double INITIAL_BORDER_DIAMETER = 32.0; // 16 block radius
+    private static final double EXPANDED_BORDER_DIAMETER = 2_000_000.0; // 1,000,000 block radius
 
     public CountdownManager(MinecraftServer server) {
         this.server = server;
@@ -43,6 +48,9 @@ public class CountdownManager {
             // Use generic damage source that doesn't show death message
             player.damage(player.getServerWorld(), player.getServerWorld().getDamageSources().genericKill(), Float.MAX_VALUE);
         }
+
+        // Clamp world border tightly around spawn during countdown setup
+        setWorldBorderDiameter(INITIAL_BORDER_DIAMETER, true);
 
         // Schedule blindness application using tick-based delay
         this.needsBlindnessApplication = true;
@@ -72,6 +80,9 @@ public class CountdownManager {
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
                 net.minecraft.entity.effect.StatusEffects.GLOWING, 300, 0, false, false, false));
         }
+
+        // Open up the world border for the run
+        setWorldBorderDiameter(EXPANDED_BORDER_DIAMETER, false);
     }
 
     public void stop() {
@@ -160,5 +171,16 @@ public class CountdownManager {
         server.getPlayerManager().getPlayerList().forEach(player -> {
             player.sendMessage(message, true);
         });
+    }
+
+    private void setWorldBorderDiameter(double diameter, boolean recenterToSpawn) {
+        for (ServerWorld world : server.getWorlds()) {
+            WorldBorder border = world.getWorldBorder();
+            if (recenterToSpawn) {
+                BlockPos spawn = world.getSpawnPos();
+                border.setCenter(spawn.getX() + 0.5, spawn.getZ() + 0.5);
+            }
+            border.setSize(diameter);
+        }
     }
 }
