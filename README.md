@@ -99,13 +99,8 @@ I found the original SharedHealth mod and noticed it skipped 1.21.4, so I though
 
 *(Only triggers if countdown was active)*
 
-- Golden “DRAGON DEFEATED!” title with completion time
-- Pigstep music, goat horn fanfare, fireworks
-- Creative mode, regeneration 100, resistance 100, glowing for all
-- Fall damage disabled; effects reapplied every 2 seconds
-- Victory statistics broadcast with MVP calculation
-- Victory run recorded in leaderboard data
-- World saved under `victory_{timestamp}`
+- Ender Dragon victory event with cool effects and automatic player protection
+- World is preserved as `victory_{timestamp}` and the run is logged for the leaderboard
 
 ### 📝 Utility Commands
 
