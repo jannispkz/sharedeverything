@@ -34,7 +34,7 @@ public abstract class StatusEffectMixin {
         SYNCED_EFFECTS.add(StatusEffects.NIGHT_VISION);
         SYNCED_EFFECTS.add(StatusEffects.HASTE);
         SYNCED_EFFECTS.add(StatusEffects.LUCK);
-        SYNCED_EFFECTS.add(StatusEffects.BAD_LUCK);
+        SYNCED_EFFECTS.add(StatusEffects.UNLUCK);
         SYNCED_EFFECTS.add(StatusEffects.SLOW_FALLING);
         SYNCED_EFFECTS.add(StatusEffects.CONDUIT_POWER);
         SYNCED_EFFECTS.add(StatusEffects.DOLPHINS_GRACE);
