@@ -6,14 +6,14 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MilkBucketItem;
+import net.minecraft.item.Items;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(MilkBucketItem.class)
+@Mixin(targets = "net.minecraft.item.MilkBucketItem")
 public abstract class MilkBucketItemMixin {
 
     @Inject(method = "finishUsing", at = @At("TAIL"))
