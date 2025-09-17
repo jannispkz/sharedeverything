@@ -2,6 +2,10 @@
 
 A fork of [Neddslayer's SharedHealth](https://github.com/Neddslayer/sharedhealth) mod with extensive speedrun and challenge features.
 
+## Why This Fork Exists
+
+I found the original SharedHealth mod and noticed it skipped 1.21.4, so I thought "how hard could it be to port it?" Well, after successfully porting it, I started adding features my friends and I wanted for our speedrun challenges. One thing led to another, and it evolved into this speedrun-focused hybrid that we use regularly. If you enjoy this kind of competitive Minecraft gameplay, feel free to use it as well (at your own risk)!
+
 ⚠️ **WARNING: This mod includes AUTO WORLD DELETION features for speedrun resets. Read carefully before using!** ⚠️
 
 ---
@@ -56,9 +60,18 @@ A fork of [Neddslayer's SharedHealth](https://github.com/Neddslayer/sharedhealth
   - Clears player inventories on start
 
 - **Damage Feed Sidebar**
-  - Real-time damage tracking on the right side
-  - Shows player name, damage amount, and source
-  - Color-coded entries that fade over time
+  - Real-time damage tracking displayed on the right side of screen
+  - Shows last 8 damage events across all players
+  - Format: `PlayerName took X damage from Source`
+    - Damage < 1: Shows decimal (e.g., "0.5")
+    - Damage ≥ 1: Shows whole number (e.g., "6")
+  - Color-coded by age:
+    - Red: Fresh damage (< 1 second)
+    - Gray: Recent damage (1-4 seconds)
+    - Dark Gray: Old damage (4-6 seconds)
+    - Auto-removes after 6 seconds
+  - Updates every 500ms for smooth transitions
+  - Automatically hides when empty
   - Reset with `/resetscoreboard` 
 
 - **Death System Overhaul**
@@ -66,7 +79,6 @@ A fork of [Neddslayer's SharedHealth](https://github.com/Neddslayer/sharedhealth
   - "EVERYONE DIED" title with wither spawn sound
   - Shows death statistics (deaths, kills, damage dealt/taken, distance walked)
   - **Automatic world deletion after 30 seconds**
-  - Cross-dimension death synchronization
 
 ### 🐉 Ender Dragon Victory Celebration
 
