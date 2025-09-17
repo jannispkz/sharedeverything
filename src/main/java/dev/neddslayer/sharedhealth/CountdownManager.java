@@ -18,6 +18,7 @@ public class CountdownManager {
     private int preCountdownTicks;
     private boolean needsBlindnessApplication;
     private int blindnessDelayTicks;
+    private int borderExpandDelayTicks;
     private static final int PRE_COUNTDOWN_DELAY = 100; // 5 seconds * 20 ticks
     private static final int BLINDNESS_DURATION = 120; // 6 seconds * 20 ticks
     private static final int DEBUFF_DURATION = 100; // 5 seconds * 20 ticks
@@ -33,6 +34,7 @@ public class CountdownManager {
         this.preCountdownTicks = 0;
         this.needsBlindnessApplication = false;
         this.blindnessDelayTicks = 0;
+        this.borderExpandDelayTicks = -1;
     }
 
     public void start() {
@@ -50,7 +52,7 @@ public class CountdownManager {
         }
 
         // Clamp world border tightly around spawn during countdown setup
-        setWorldBorderDiameter(INITIAL_BORDER_DIAMETER, true);
+        setWorldBorderDiameter(INITIAL_BORDER_DIAMETER, true, 0);
 
         // Schedule blindness application using tick-based delay
         this.needsBlindnessApplication = true;
@@ -81,8 +83,9 @@ public class CountdownManager {
                 net.minecraft.entity.effect.StatusEffects.GLOWING, 300, 0, false, false, false));
         }
 
-        // Open up the world border for the run
-        setWorldBorderDiameter(EXPANDED_BORDER_DIAMETER, false);
+        // Ease the world border out so players can watch it expand before unlocking
+        setWorldBorderDiameter(200.0, false, 10_000L); // 100-block radius over 10 seconds
+        borderExpandDelayTicks = 200; // wait 10 seconds before unlocking fully
     }
 
     public void stop() {
@@ -149,6 +152,14 @@ public class CountdownManager {
             return;
         }
 
+        if (borderExpandDelayTicks >= 0) {
+            borderExpandDelayTicks--;
+            if (borderExpandDelayTicks == 0) {
+                setWorldBorderDiameter(EXPANDED_BORDER_DIAMETER, false, 0);
+                borderExpandDelayTicks = -1;
+            }
+        }
+
         // Reapply glowing effect every 60 ticks (3 seconds) to counter milk and keep players visible
         if (server.getTicks() % 60 == 0) {
             for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
@@ -174,13 +185,21 @@ public class CountdownManager {
     }
 
     private void setWorldBorderDiameter(double diameter, boolean recenterToSpawn) {
+        setWorldBorderDiameter(diameter, recenterToSpawn, 0);
+    }
+
+    private void setWorldBorderDiameter(double diameter, boolean recenterToSpawn, long transitionMillis) {
         for (ServerWorld world : server.getWorlds()) {
             WorldBorder border = world.getWorldBorder();
             if (recenterToSpawn) {
                 BlockPos spawn = world.getSpawnPos();
                 border.setCenter(spawn.getX() + 0.5, spawn.getZ() + 0.5);
             }
-            border.setSize(diameter);
+            if (transitionMillis > 0) {
+                border.interpolateSize(border.getSize(), diameter, transitionMillis);
+            } else {
+                border.setSize(diameter);
+            }
         }
     }
 }
