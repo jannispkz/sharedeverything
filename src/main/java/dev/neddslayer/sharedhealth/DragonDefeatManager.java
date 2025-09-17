@@ -76,8 +76,8 @@ public class DragonDefeatManager {
             player.playSoundToPlayer(SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.MASTER, 1.0f, 1.0f);
             player.playSoundToPlayer(net.minecraft.sound.SoundEvent.of(net.minecraft.util.Identifier.of("item.goat_horn.sound.0")), SoundCategory.MASTER, 1.0f, 1.0f);
 
-            // Play Pigstep music disc
-            player.playSoundToPlayer(SoundEvents.MUSIC_DISC_PIGSTEP.value(), SoundCategory.RECORDS, 1.0f, 1.0f);
+            // Play Pigstep music disc as ambient sound (follows player)
+            player.playSoundToPlayer(SoundEvents.MUSIC_DISC_PIGSTEP.value(), SoundCategory.AMBIENT, 0.5f, 1.0f);
 
             // Set player to creative mode
             player.changeGameMode(net.minecraft.world.GameMode.CREATIVE);
@@ -148,8 +148,6 @@ public class DragonDefeatManager {
             }
 
             player.sendMessage(separator, false);
-            player.sendMessage(Text.literal("World will reset in 60 seconds!").formatted(Formatting.RED, Formatting.BOLD), false);
-            player.sendMessage(separator, false);
         }
     }
 
@@ -170,23 +168,29 @@ public class DragonDefeatManager {
         if (resetCountdownTicks > 0) {
             resetCountdownTicks--;
 
-            // Show countdown warnings at specific intervals
-            int secondsLeft = resetCountdownTicks / 20;
-            if (secondsLeft == 30 || secondsLeft == 10 || secondsLeft == 5 ||
-                (secondsLeft <= 3 && secondsLeft > 0 && resetCountdownTicks % 20 == 0)) {
+            // Calculate time remaining
+            int totalSeconds = resetCountdownTicks / 20;
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
 
-                Text warning = Text.literal("World resetting in " + secondsLeft + " seconds!")
-                    .formatted(Formatting.RED, Formatting.BOLD);
+            // Format countdown message like the start timer
+            String timeString;
+            if (minutes > 0) {
+                timeString = String.format("World resetting in: %d:%02d", minutes, seconds);
+            } else {
+                timeString = String.format("World resetting in: %d", seconds);
+            }
 
-                for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-                    player.sendMessage(warning, false);
-                    player.sendMessage(warning, true); // Also show in action bar
+            Text countdownMessage = Text.literal(timeString).formatted(Formatting.RED, Formatting.BOLD);
 
-                    // Play warning sound for final countdown
-                    if (secondsLeft <= 3) {
-                        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(),
-                            SoundCategory.MASTER, 1.0f, 0.5f);
-                    }
+            // Show countdown in action bar for all players
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                player.sendMessage(countdownMessage, true);
+
+                // Play warning sound for final 3 seconds
+                if (totalSeconds <= 3 && totalSeconds > 0 && resetCountdownTicks % 20 == 0) {
+                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(),
+                        SoundCategory.MASTER, 1.0f, 0.5f);
                 }
             }
 
