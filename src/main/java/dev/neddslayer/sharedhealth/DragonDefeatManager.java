@@ -87,12 +87,18 @@ public class DragonDefeatManager {
             player.changeGameMode(net.minecraft.world.GameMode.CREATIVE);
 
             // Give players regeneration, resistance and glowing to prevent any deaths during celebration
+            // false, false, false = no particles, no icon, no ambient
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                net.minecraft.entity.effect.StatusEffects.REGENERATION, 10000, 100, false, false, false)); // 500 seconds
+                net.minecraft.entity.effect.StatusEffects.REGENERATION, 10000, 100, false, false, false)); // 500 seconds, no particles
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                net.minecraft.entity.effect.StatusEffects.RESISTANCE, 10000, 100, false, false, false)); // 500 seconds
+                net.minecraft.entity.effect.StatusEffects.RESISTANCE, 10000, 100, false, false, false)); // 500 seconds, no particles
             player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
-                net.minecraft.entity.effect.StatusEffects.GLOWING, 10000, 0, false, false, true)); // 500 seconds
+                net.minecraft.entity.effect.StatusEffects.GLOWING, 10000, 0, false, false, false)); // 500 seconds, no particles
+        }
+
+        // Disable fall damage during celebration
+        for (ServerWorld world : server.getWorlds()) {
+            world.getGameRules().get(net.minecraft.world.GameRules.FALL_DAMAGE).set(false, server);
         }
 
         // Show statistics in chat
@@ -165,6 +171,19 @@ public class DragonDefeatManager {
 
     public void tick() {
         if (!isVictory) return;
+
+        // Reapply protective effects every 40 ticks (2 seconds) to counter milk drinking
+        if (server.getTicks() % 40 == 0) {
+            for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+                // Reapply effects without particles
+                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    net.minecraft.entity.effect.StatusEffects.REGENERATION, 10000, 100, false, false, false));
+                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    net.minecraft.entity.effect.StatusEffects.RESISTANCE, 10000, 100, false, false, false));
+                player.addStatusEffect(new net.minecraft.entity.effect.StatusEffectInstance(
+                    net.minecraft.entity.effect.StatusEffects.GLOWING, 10000, 0, false, false, false));
+            }
+        }
 
         // Handle fireworks
         if (fireworkTicks > 0) {
@@ -293,5 +312,10 @@ public class DragonDefeatManager {
         this.fireworkTicks = 0;
         this.resetCountdownTicks = 0;
         this.statsShown = false;
+
+        // Re-enable fall damage for next run
+        for (ServerWorld world : server.getWorlds()) {
+            world.getGameRules().get(net.minecraft.world.GameRules.FALL_DAMAGE).set(true, server);
+        }
     }
 }
