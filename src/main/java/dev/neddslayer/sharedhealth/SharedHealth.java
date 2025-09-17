@@ -45,6 +45,7 @@ public class SharedHealth implements ModInitializer {
     public static DamageFeedManager damageFeedManager;
     public static CountdownManager countdownManager;
     public static ShutdownManager shutdownManager;
+    public static DragonDefeatManager dragonDefeatManager;
     public static boolean isResettingPlayers = false;
 
     /**
@@ -188,6 +189,7 @@ public class SharedHealth implements ModInitializer {
             damageFeedManager = new DamageFeedManager(server);
             countdownManager = new CountdownManager(server);
             shutdownManager = new ShutdownManager(server);
+            dragonDefeatManager = new DragonDefeatManager(server);
         });
 
         // Clear managers when server stops
@@ -202,6 +204,10 @@ public class SharedHealth implements ModInitializer {
             }
             if (shutdownManager != null) {
                 shutdownManager = null;
+            }
+            if (dragonDefeatManager != null) {
+                dragonDefeatManager.reset();
+                dragonDefeatManager = null;
             }
         });
 
@@ -219,6 +225,10 @@ public class SharedHealth implements ModInitializer {
                 // Update shutdown manager
                 if (shutdownManager != null) {
                     shutdownManager.tick();
+                }
+                // Update dragon defeat manager
+                if (dragonDefeatManager != null) {
+                    dragonDefeatManager.tick();
                 }
             }
 

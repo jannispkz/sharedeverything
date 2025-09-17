@@ -82,6 +82,10 @@ public class CountdownManager {
         return isActive || isPreCountdown;
     }
 
+    public long getStartTime() {
+        return startTime;
+    }
+
     public void tick() {
         // Handle blindness application first
         if (needsBlindnessApplication) {

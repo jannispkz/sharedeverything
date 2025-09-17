@@ -4,13 +4,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 
 public class ShutdownManager {
     private final MinecraftServer server;
     private boolean isShuttingDown;
+    private boolean isVictoryShutdown = false;
     private int shutdownTicks;
     private static final int SHUTDOWN_DELAY = 600; // 30 seconds * 20 ticks
 
@@ -23,6 +21,13 @@ public class ShutdownManager {
     public void startShutdown() {
         this.isShuttingDown = true;
         this.shutdownTicks = SHUTDOWN_DELAY;
+        this.isVictoryShutdown = false;
+    }
+
+    public void startVictoryShutdown() {
+        this.isShuttingDown = true;
+        this.shutdownTicks = SHUTDOWN_DELAY;
+        this.isVictoryShutdown = true;
     }
 
     public void tick() {
@@ -56,6 +61,13 @@ public class ShutdownManager {
 
     public void forceImmediateShutdown() {
         this.isShuttingDown = true;
+        this.isVictoryShutdown = false;
+        deleteWorldAndStop();
+    }
+
+    public void forceImmediateVictoryShutdown() {
+        this.isShuttingDown = true;
+        this.isVictoryShutdown = true;
         deleteWorldAndStop();
     }
 
@@ -69,20 +81,37 @@ public class ShutdownManager {
         // Save the server first
         server.save(false, true, true);
 
-        // Schedule world deletion after server stops
+        // Schedule world renaming after server stops
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
                 // Small delay to ensure server is fully stopped
                 Thread.sleep(2000);
 
-                // Delete the world folder
                 File worldFolder = new File("world");
                 if (worldFolder.exists() && worldFolder.isDirectory()) {
-                    deleteDirectoryRecursively(worldFolder.toPath());
-                    System.out.println("[SharedHealth] World folder deleted successfully.");
+                    if (isVictoryShutdown) {
+                        // Victory: Rename the world folder with timestamp
+                        long timestamp = System.currentTimeMillis() / 1000; // Unix timestamp in seconds
+                        File renamedFolder = new File("victory_" + timestamp);
+
+                        if (worldFolder.renameTo(renamedFolder)) {
+                            System.out.println("[SharedHealth] Victory! World folder renamed to: " + renamedFolder.getName());
+
+                            // Create a fresh empty world folder for next game
+                            File newWorldFolder = new File("world");
+                            newWorldFolder.mkdirs();
+                            System.out.println("[SharedHealth] Created new empty world folder for next game.");
+                        } else {
+                            System.err.println("[SharedHealth] Failed to rename world folder.");
+                        }
+                    } else {
+                        // Death/Reset: Delete the world folder completely
+                        deleteDirectoryRecursively(worldFolder);
+                        System.out.println("[SharedHealth] World folder deleted (death/reset).");
+                    }
                 }
             } catch (Exception e) {
-                System.err.println("[SharedHealth] Failed to delete world: " + e.getMessage());
+                System.err.println("[SharedHealth] Failed to rename world: " + e.getMessage());
             }
         }));
 
@@ -90,19 +119,17 @@ public class ShutdownManager {
         server.stop(false);
     }
 
-    private void deleteDirectoryRecursively(Path path) throws IOException {
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
+    private void deleteDirectoryRecursively(File directory) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectoryRecursively(file);
+                } else {
+                    file.delete();
+                }
             }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
-        });
+        }
+        directory.delete();
     }
 }
