@@ -55,11 +55,12 @@ public class LeaderboardManager {
     }
 
     public synchronized List<RunRecord> getTopRecords(int limit) {
-        List<RunRecord> sorted = new ArrayList<>(records);
-        sorted.sort(Comparator
-            .comparing((RunRecord record) -> !record.victory)
-            .thenComparingLong(record -> record.durationMillis)
-            .thenComparingLong(record -> record.timestamp));
+        List<RunRecord> sorted = records.stream()
+            .filter(record -> record.victory)
+            .sorted(Comparator
+                .comparingLong((RunRecord record) -> record.durationMillis)
+                .thenComparingLong(record -> record.timestamp))
+            .collect(Collectors.toList());
         if (sorted.size() > limit) {
             return new ArrayList<>(sorted.subList(0, limit));
         }
@@ -71,6 +72,9 @@ public class LeaderboardManager {
         source.sendFeedback(() -> Text.literal("=== Shared Health Leaderboard (Top " + maxEntries + ") ===").formatted(Formatting.GOLD, Formatting.BOLD), false);
 
         List<RunRecord> top = getTopRecords(maxEntries);
+        if (top.isEmpty()) {
+            source.sendFeedback(() -> Text.literal("No victories recorded yet.").formatted(Formatting.DARK_GRAY), false);
+        }
         for (int i = 0; i < maxEntries; i++) {
             if (i < top.size()) {
                 RunRecord record = top.get(i);
