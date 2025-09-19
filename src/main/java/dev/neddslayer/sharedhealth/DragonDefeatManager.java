@@ -121,7 +121,6 @@ public class DragonDefeatManager {
         statsShown = true;
 
         // Collect statistics
-        int totalDeaths = 0;
         int totalMobKills = 0;
         int totalDamageDealt = 0;
         int totalDamageTaken = 0;
@@ -130,7 +129,6 @@ public class DragonDefeatManager {
         int mvpScore = 0;
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            totalDeaths += player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DEATHS));
             totalMobKills += player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.MOB_KILLS));
             totalDamageDealt += player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_DEALT));
             totalDamageTaken += player.getStatHandler().getStat(Stats.CUSTOM.getOrCreateStat(Stats.DAMAGE_TAKEN));
@@ -154,9 +152,6 @@ public class DragonDefeatManager {
             player.sendMessage(separator, false);
             player.sendMessage(header, false);
             player.sendMessage(separator, false);
-
-            player.sendMessage(Text.literal("☠ Total Deaths: ").formatted(Formatting.RED)
-                .append(Text.literal(String.valueOf(totalDeaths)).formatted(Formatting.WHITE)), false);
 
             player.sendMessage(Text.literal("⚔ Mobs Killed: ").formatted(Formatting.GREEN)
                 .append(Text.literal(String.valueOf(totalMobKills)).formatted(Formatting.WHITE)), false);
